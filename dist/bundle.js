@@ -58,27 +58,132 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	/// <reference path="../typings/browser.d.ts"/>
+	/// <reference path="../public/lib/phaser.d.ts"/>
+	var Phaser = __webpack_require__(/*! phaser */ 2);
+	var main_menu_ts_1 = __webpack_require__(/*! ./main-menu.ts */ 3);
+	var base_level_ts_1 = __webpack_require__(/*! ./base-level.ts */ 4);
+	var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game');
+	game.state.add('MainMenu', main_menu_ts_1.MainMenu, true);
+	game.state.add('Level', base_level_ts_1.BaseLevel, true);
+	game.state.start('MainMenu');
+
+
+/***/ },
+/* 2 */
+/*!*************************!*\
+  !*** external "Phaser" ***!
+  \*************************/
+/***/ function(module, exports) {
+
+	module.exports = Phaser;
+
+/***/ },
+/* 3 */
+/*!**************************!*\
+  !*** ./src/main-menu.ts ***!
+  \**************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 	var __extends = (this && this.__extends) || function (d, b) {
 	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	/// <reference path="../typings/browser.d.ts"/>
-	/// <reference path="../public/lib/phaser.d.ts"/>
 	var Phaser = __webpack_require__(/*! phaser */ 2);
-	var PhaseChangeGame = (function (_super) {
-	    __extends(PhaseChangeGame, _super);
-	    function PhaseChangeGame() {
+	var MainMenu = (function (_super) {
+	    __extends(MainMenu, _super);
+	    function MainMenu() {
+	        _super.call(this);
+	        this.selected = 0;
+	        this.style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+	        this.levels = [
+	            'Friday Night',
+	            'TBA',
+	            'TBA',
+	            'TBA',
+	            'TBA',
+	        ];
+	    }
+	    MainMenu.prototype.preload = function () {
+	    };
+	    MainMenu.prototype.create = function () {
+	        var _this = this;
+	        this.game.stage.backgroundColor = '#337799';
+	        var titleStyle = { font: "bold 46px Arial", fill: "#d30", boundsAlignH: "center", boundsAlignV: "middle" };
+	        var title = this.game.add.text(0, 0, "Dr. Phase!", titleStyle);
+	        title.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+	        title.setTextBounds(0, 0, 800, 100);
+	        this.bar = this.game.add.graphics();
+	        for (var i = 0; i < this.levels.length; i++) {
+	            this.drawText(this.levels[i], i);
+	        }
+	        ;
+	        //Enable cursor keys so we can create some controls
+	        this.cursors = this.game.input.keyboard.createCursorKeys();
+	        this.game.input.onDown.add(function (event) {
+	            var item = Math.floor((_this.game.input.y - 100) / 100);
+	            if (item == 0) {
+	                _this.game.state.start('Level', ['FridayNight']);
+	            }
+	            else {
+	                console.log("Invalid level selected!");
+	            }
+	        });
+	    };
+	    MainMenu.prototype.update = function () {
+	        this.selected = Math.floor((this.game.input.y - 100) / 100);
+	        if (this.selected < 0) {
+	            this.selected = 0;
+	        }
+	        this.bar.clear();
+	        this.bar.beginFill(0x000000, 0.2);
+	        this.bar.drawRect(0, (100 * this.selected) + 100, 800, 100);
+	    };
+	    MainMenu.prototype.drawText = function (name, pos) {
+	        //  The Text is positioned at 0, 100
+	        var text = this.game.add.text(0, 0, name, this.style);
+	        text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+	        //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
+	        var line = pos * 100 + 100;
+	        text.setTextBounds(0, line, 800, 100);
+	    };
+	    return MainMenu;
+	}(Phaser.State));
+	exports.MainMenu = MainMenu;
+
+
+/***/ },
+/* 4 */
+/*!***************************!*\
+  !*** ./src/base-level.ts ***!
+  \***************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var Phaser = __webpack_require__(/*! phaser */ 2);
+	var BaseLevel = (function (_super) {
+	    __extends(BaseLevel, _super);
+	    function BaseLevel() {
 	        _super.call(this);
 	    }
-	    PhaseChangeGame.prototype.init = function () {
+	    BaseLevel.prototype.init = function () {
 	    };
-	    PhaseChangeGame.prototype.preload = function () {
+	    BaseLevel.prototype.preload = function () {
 	        this.game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
-	        this.game.load.tilemap('tilemap', 'assets/level.json', null, Phaser.Tilemap.TILED_JSON);
-	        this.game.load.image('tiles', 'assets/images/desert_tilesheet.png');
+	        this.game.load.tilemap('tilemap', 'assets/friday_night.json', null, Phaser.Tilemap.TILED_JSON);
+	        this.game.load.image('center_platform', 'assets/friday_night/center_platform.png');
+	        this.game.load.image('right_platform', 'assets/friday_night/right_platform.png');
+	        this.game.load.image('left_platform', 'assets/friday_night/left_platform.png');
+	        this.game.load.image('floor', 'assets/friday_night/floor.png');
 	    };
-	    PhaseChangeGame.prototype.create = function () {
+	    BaseLevel.prototype.create = function () {
 	        //Start the Arcade Physics systems
 	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
 	        //Change the background colour
@@ -87,14 +192,17 @@
 	        //is the name you gave the tilesheet when importing it into Tiled, the second
 	        //is the key to the asset in Phaser
 	        this.map = this.game.add.tilemap('tilemap');
-	        this.map.addTilesetImage('Desert', 'tiles');
+	        this.map.addTilesetImage('platforms', 'center_platform');
+	        this.map.addTilesetImage('platforms', 'right_platform');
+	        this.map.addTilesetImage('platforms', 'left_platform');
+	        this.map.addTilesetImage('platforms', 'floor');
 	        //Add both the background and ground layers. We won't be doing anything with the
 	        //GroundLayer though
 	        //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
-	        this.groundLayer = this.map.createLayer('GroundLayer');
+	        this.groundLayer = this.map.createLayer('platform');
 	        //this.groundLayer.scale.set(0.9,0.9);
 	        //Before you can use the collide function you need to set what tiles can collide
-	        this.map.setCollisionBetween(1, 100, true, 'GroundLayer');
+	        this.map.setCollisionBetween(1, 100, true, 'platform');
 	        //Add the sprite to the game and enable arcade physics on it
 	        this.sprite = this.game.add.sprite(10, 0, 'dude');
 	        this.game.physics.arcade.enable(this.sprite);
@@ -113,28 +221,18 @@
 	        //Enable cursor keys so we can create some controls
 	        this.cursors = this.game.input.keyboard.createCursorKeys();
 	    };
-	    PhaseChangeGame.prototype.update = function () {
+	    BaseLevel.prototype.update = function () {
 	        //Make the sprite collide with the ground layer
-	        this.game.physics.arcade.collide(this.sprite, this.groundLayer);
+	        //this.game.physics.arcade.collide(this.sprite, this.groundLayer);
 	        //Make the sprite jump when the up key is pushed
 	        if (this.cursors.up.isDown) {
 	            this.sprite.body.velocity.y = -500;
 	        }
 	    };
-	    return PhaseChangeGame;
+	    return BaseLevel;
 	}(Phaser.State));
-	var game = new Phaser.Game(640, 400, Phaser.AUTO, 'game');
-	game.state.add('Game', PhaseChangeGame, true);
+	exports.BaseLevel = BaseLevel;
 
-
-/***/ },
-/* 2 */
-/*!*************************!*\
-  !*** external "Phaser" ***!
-  \*************************/
-/***/ function(module, exports) {
-
-	module.exports = Phaser;
 
 /***/ }
 /******/ ]);
