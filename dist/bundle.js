@@ -79,8 +79,6 @@
 	        this.game.load.image('tiles', 'assets/images/desert_tilesheet.png');
 	    };
 	    PhaseChangeGame.prototype.create = function () {
-	        //Start the Arcade Physics systems
-	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
 	        //Change the background colour
 	        this.game.stage.backgroundColor = "#a9f0ff";
 	        //Add the tilemap and tileset image. The first parameter in addTilesetImage
@@ -90,12 +88,14 @@
 	        this.map.addTilesetImage('Desert', 'tiles');
 	        //Add both the background and ground layers. We won't be doing anything with the
 	        //GroundLayer though
-	        this.backgroundLayer = this.map.createLayer('BackgroundLayer');
+	        //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
 	        this.groundLayer = this.map.createLayer('GroundLayer');
+	        this.groundLayer.debug = true;
+	        //this.groundLayer.setScale(0.75,0.75);
 	        //Before you can use the collide function you need to set what tiles can collide
 	        this.map.setCollisionBetween(1, 100, true, 'GroundLayer');
 	        //Add the sprite to the game and enable arcade physics on it
-	        this.sprite = this.game.add.sprite(50, 1100, 'dude');
+	        this.sprite = this.game.add.sprite(10, 0, 'dude');
 	        this.game.physics.arcade.enable(this.sprite);
 	        //Change the world size to match the size of this layer
 	        this.groundLayer.resizeWorld();
@@ -103,7 +103,7 @@
 	        this.sprite.body.bounce.y = 0.2;
 	        this.sprite.body.gravity.y = 2000;
 	        this.sprite.body.gravity.x = 20;
-	        //this.sprite.body.velocity.x = 100;
+	        this.sprite.body.velocity.x = 100;
 	        //Create a running animation for the sprite and play it
 	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
 	        this.sprite.animations.play('right');
@@ -111,6 +111,8 @@
 	        this.game.camera.follow(this.sprite);
 	        //Enable cursor keys so we can create some controls
 	        this.cursors = this.game.input.keyboard.createCursorKeys();
+	        //Start the Arcade Physics systems
+	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
 	    };
 	    PhaseChangeGame.prototype.update = function () {
 	        //Make the sprite collide with the ground layer
