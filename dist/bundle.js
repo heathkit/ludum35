@@ -212,6 +212,8 @@
 	        //Add the sprite to the game and enable arcade physics on it
 	        this.sprite = this.game.add.sprite(10, 0, 'dude');
 	        this.game.physics.arcade.enable(this.sprite);
+	        this.sprite.body.setSize(32, 48, 0, -18);
+	        this.sprite.debug = true;
 	        //Change the world size to match the size of this layer
 	        this.groundLayer.resizeWorld();
 	        //Set some physics on the sprite
