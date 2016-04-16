@@ -19,10 +19,7 @@ export class BaseLevel extends Phaser.State {
   preload() {
      this.game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
      this.game.load.tilemap('tilemap', 'assets/friday_night.json', null, Phaser.Tilemap.TILED_JSON);
-     this.game.load.image('center_platform', 'assets/friday_night/center_platform.png');
-     this.game.load.image('right_platform', 'assets/friday_night/right_platform.png');
-     this.game.load.image('left_platform', 'assets/friday_night/left_platform.png');
-     this.game.load.image('floor', 'assets/friday_night/floor.png');
+     this.game.load.image('tiles', 'assets/friday_night_tilesheet.png');
   }
 
   create() {
@@ -36,10 +33,7 @@ export class BaseLevel extends Phaser.State {
     //is the name you gave the tilesheet when importing it into Tiled, the second
     //is the key to the asset in Phaser
     this.map = this.game.add.tilemap('tilemap');
-    this.map.addTilesetImage('platforms', 'center_platform');
-    this.map.addTilesetImage('platforms', 'right_platform');
-    this.map.addTilesetImage('platforms', 'left_platform');
-    this.map.addTilesetImage('platforms', 'floor');
+    this.map.addTilesetImage('platform', 'tiles');
 
     //Add both the background and ground layers. We won't be doing anything with the
     //GroundLayer though
@@ -60,7 +54,7 @@ export class BaseLevel extends Phaser.State {
     //Set some physics on the sprite
     this.sprite.body.bounce.y = 0.2;
     this.sprite.body.gravity.y = 2000;
-    this.sprite.body.gravity.x = 20;
+    //this.sprite.body.gravity.x = 20;
     //this.sprite.body.velocity.x = 100;
 
     //Create a running animation for the sprite and play it
@@ -76,11 +70,23 @@ export class BaseLevel extends Phaser.State {
 
   update() {
     //Make the sprite collide with the ground layer
-    //this.game.physics.arcade.collide(this.sprite, this.groundLayer);
+    this.game.physics.arcade.collide(this.sprite, this.groundLayer);
 
     //Make the sprite jump when the up key is pushed
     if(this.cursors.up.isDown) {
       this.sprite.body.velocity.y = -500;
+    } else if(this.cursors.left.isDown) {
+      this.sprite.body.velocity.x = -500;
+    } else if(this.cursors.right.isDown) {
+      this.sprite.body.velocity.x = 500;
+    } else {
+      this.sprite.body.velocity.x = 0;
     }
+
+    // TODO: Remove this hack for falling through the floor.
+    if (this.sprite.y > 1100) {
+      this.sprite.y = 1000;
+    }
+
   }
 }

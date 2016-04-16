@@ -43,7 +43,7 @@ export class MainMenu extends Phaser.State {
     this.game.input.onDown.add((event) => {
       let item = Math.floor((this.game.input.y - 100)/100);
       if (item == 0 ) {
-        this.game.state.start('Level', ['FridayNight']);
+        this.game.state.start('Level', true, false, ['FridayNight']);
       } else {
         console.log("Invalid level selected!")  ;
       }
