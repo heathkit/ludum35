@@ -58,12 +58,24 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
 	/// <reference path="../typings/browser.d.ts"/>
 	/// <reference path="../public/lib/phaser.d.ts"/>
 	var Phaser = __webpack_require__(/*! phaser */ 2);
 	var main_menu_ts_1 = __webpack_require__(/*! ./main-menu.ts */ 3);
 	var base_level_ts_1 = __webpack_require__(/*! ./base-level.ts */ 4);
-	var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game');
+	var DrPhase = (function (_super) {
+	    __extends(DrPhase, _super);
+	    function DrPhase(width, height, game, name) {
+	        _super.call(this, width, height, game, name);
+	    }
+	    return DrPhase;
+	}(Phaser.Game));
+	var game = new DrPhase(800, 600, Phaser.AUTO, 'game');
 	game.state.add('MainMenu', main_menu_ts_1.MainMenu, true);
 	game.state.add('Level', base_level_ts_1.BaseLevel, true);
 	game.state.start('MainMenu');
@@ -125,7 +137,7 @@
 	        this.game.input.onDown.add(function (event) {
 	            var item = Math.floor((_this.game.input.y - 100) / 100);
 	            if (item == 0) {
-	                _this.game.state.start('Level', ['FridayNight']);
+	                _this.game.state.start('Level', true, false, ['FridayNight']);
 	            }
 	            else {
 	                console.log("Invalid level selected!");
@@ -178,10 +190,7 @@
 	    BaseLevel.prototype.preload = function () {
 	        this.game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
 	        this.game.load.tilemap('tilemap', 'assets/friday_night.json', null, Phaser.Tilemap.TILED_JSON);
-	        this.game.load.image('center_platform', 'assets/friday_night/center_platform.png');
-	        this.game.load.image('right_platform', 'assets/friday_night/right_platform.png');
-	        this.game.load.image('left_platform', 'assets/friday_night/left_platform.png');
-	        this.game.load.image('floor', 'assets/friday_night/floor.png');
+	        this.game.load.image('tiles', 'assets/friday_night_tilesheet.png');
 	    };
 	    BaseLevel.prototype.create = function () {
 	        //Start the Arcade Physics systems
@@ -192,10 +201,7 @@
 	        //is the name you gave the tilesheet when importing it into Tiled, the second
 	        //is the key to the asset in Phaser
 	        this.map = this.game.add.tilemap('tilemap');
-	        this.map.addTilesetImage('platforms', 'center_platform');
-	        this.map.addTilesetImage('platforms', 'right_platform');
-	        this.map.addTilesetImage('platforms', 'left_platform');
-	        this.map.addTilesetImage('platforms', 'floor');
+	        this.map.addTilesetImage('platform', 'tiles');
 	        //Add both the background and ground layers. We won't be doing anything with the
 	        //GroundLayer though
 	        //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
@@ -211,7 +217,7 @@
 	        //Set some physics on the sprite
 	        this.sprite.body.bounce.y = 0.2;
 	        this.sprite.body.gravity.y = 2000;
-	        this.sprite.body.gravity.x = 20;
+	        //this.sprite.body.gravity.x = 20;
 	        //this.sprite.body.velocity.x = 100;
 	        //Create a running animation for the sprite and play it
 	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
@@ -223,10 +229,23 @@
 	    };
 	    BaseLevel.prototype.update = function () {
 	        //Make the sprite collide with the ground layer
-	        //this.game.physics.arcade.collide(this.sprite, this.groundLayer);
+	        this.game.physics.arcade.collide(this.sprite, this.groundLayer);
 	        //Make the sprite jump when the up key is pushed
 	        if (this.cursors.up.isDown) {
 	            this.sprite.body.velocity.y = -500;
+	        }
+	        else if (this.cursors.left.isDown) {
+	            this.sprite.body.velocity.x = -500;
+	        }
+	        else if (this.cursors.right.isDown) {
+	            this.sprite.body.velocity.x = 500;
+	        }
+	        else {
+	            this.sprite.body.velocity.x = 0;
+	        }
+	        // TODO: Remove this hack for falling through the floor.
+	        if (this.sprite.y > 1100) {
+	            this.sprite.y = 1000;
 	        }
 	    };
 	    return BaseLevel;
