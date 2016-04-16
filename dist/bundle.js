@@ -221,7 +221,7 @@
 	        //this.sprite.body.velocity.x = 100;
 	        //Create a running animation for the sprite and play it
 	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
-	        this.sprite.animations.play('right');
+	        this.sprite.animations.add('left', [1, 2, 3, 4], 10, true);
 	        //Make the camera follow the sprite
 	        this.game.camera.follow(this.sprite);
 	        //Enable cursor keys so we can create some controls
@@ -236,12 +236,15 @@
 	        }
 	        else if (this.cursors.left.isDown) {
 	            this.sprite.body.velocity.x = -500;
+	            this.sprite.animations.play('left');
 	        }
 	        else if (this.cursors.right.isDown) {
 	            this.sprite.body.velocity.x = 500;
+	            this.sprite.animations.play('right');
 	        }
 	        else {
 	            this.sprite.body.velocity.x = 0;
+	            this.sprite.animations.stop();
 	        }
 	        // TODO: Remove this hack for falling through the floor.
 	        if (this.sprite.y > 1100) {
