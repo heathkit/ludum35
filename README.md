@@ -1,13 +1,40 @@
-# Typescript Shmup
+# Phase Change Man!
 
-This is a port to TypeScript of [this shmup demo](http://www.photonstorm.com/tags/shmup).
+Entry for Ludum Dare 35.
 
-[Live Demo](http://mgiambalvo.github.io/typescript-shmup/)
+[Live Demo](http://mgiambalvo.github.io/ludum35/)
+
+## Overview
+
+You play phase change man! Through the power of super science, he can take the form of
+water, a cloud, or a rock. He'll need these extraordinary abilities, because sadly he
+cannot jump or fall very far.
+
+You can't hold a given form indefinately. Holding a form depletes energy, which needs to
+recharge. (Possibly add an item to give you energy)
+
+### Gas form
+- Causes you to rise to the top of the level
+- can be sucked into ventilation ducts
+- will be blown about by fans
+- can rise through floor grates
+
+### Liquid form
+- will fall to the bottom of the map
+- flows through drains and pipes
+- falls through floor grates
+
+## Ice (or block?) form
+- indestructible
+- will slide around along the floor
+- will smash through certain floor tiles when falling
 
 ## TODO
-- unit testing
+- level selection
+- handrawn level example
+- changing forms
 
-##Setup
+## Setup
 
 Local development is done with webpack and BrowerSync. To get started, run the following:
 
@@ -18,3 +45,6 @@ webpack
 ```
 
 This will start a dev server on port 3000.
+
+## Publishing
+Run `gulp deploy` to publish to github pages.
