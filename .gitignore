@@ -1,0 +1,5 @@
+.publish/
+build/
+node_modules/
+public/dist/
+typings/
