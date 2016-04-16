@@ -34,6 +34,9 @@ recharge. (Possibly add an item to give you energy)
 - handrawn level example
 - changing forms
 
+## Phaser stuff
+Camera deadzone: http://phaser.io/examples/v2/camera/deadzone
+
 ## Setup
 
 Local development is done with webpack and BrowerSync. To get started, run the following:
