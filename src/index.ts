@@ -3,137 +3,82 @@
 import * as Phaser from 'phaser';
 import * as Weapon from './weapons.ts';
 
-class ShmupGame extends Phaser.State {
-  background: Phaser.TileSprite
-  foreground: Phaser.TileSprite
-
-  player: Phaser.Sprite
+class PhaseChangeGame extends Phaser.State {
+  sprite: Phaser.Sprite
   cursors: Phaser.CursorKeys
-  speed: number
 
-  weapons: any[]
-  currentWeapon: number
-  weaponName: Phaser.BitmapText
+  map: Phaser.Tilemap
+  backgroundLayer: Phaser.TilemapLayer
+  groundLayer: Phaser.TilemapLayer
 
   constructor() {
     super();
-    this.background = null;
-    this.foreground = null;
-
-    this.player = null;
-    this.cursors = null;
-    this.speed = 300;
-
-    this.weapons = [];
-    this.currentWeapon = 0;
-    this.weaponName = null;
   }
 
   init() {
-    this.game.renderer.renderSession.roundPixels = true;
-    this.physics.startSystem(Phaser.Physics.ARCADE);
   }
 
   preload() {
-    //  We need this because the assets are on Amazon S3
-    //  Remove the next 2 lines if running locally
-    this.load.baseURL =
-        'http://files.phaser.io.s3.amazonaws.com/codingtips/issue007/';
-    this.load.crossOrigin = 'anonymous';
-
-    this.load.image('background', 'assets/back.png');
-    this.load.image('foreground', 'assets/fore.png');
-    this.load.image('player', 'assets/ship.png');
-    this.load.bitmapFont('shmupfont', 'assets/shmupfont.png',
-                         'assets/shmupfont.xml');
-
-    for (var i = 1; i <= 11; i++) {
-      this.load.image('bullet' + i, 'assets/bullet' + i + '.png');
-    }
-
-    //  Note: Graphics are not for use in any commercial project
+     this.game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
+     this.game.load.tilemap('tilemap', 'assets/level.json', null, Phaser.Tilemap.TILED_JSON);
+     this.game.load.image('tiles', 'assets/images/desert_tilesheet.png');
   }
 
   create() {
-    this.background = this.add.tileSprite(0, 0, this.game.width,
-                                          this.game.height, 'background');
-    this.background.autoScroll(-40, 0);
+    //Start the Arcade Physics systems
+    this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
-    this.weapons.push(new Weapon.SingleBullet(this.game));
-    this.weapons.push(new Weapon.FrontAndBack(this.game));
-    this.weapons.push(new Weapon.ThreeWay(this.game));
-    this.weapons.push(new Weapon.EightWay(this.game));
-    this.weapons.push(new Weapon.ScatterShot(this.game));
-    this.weapons.push(new Weapon.Beam(this.game));
-    this.weapons.push(new Weapon.SplitShot(this.game));
-    this.weapons.push(new Weapon.Pattern(this.game));
-    this.weapons.push(new Weapon.Rockets(this.game));
-    this.weapons.push(new Weapon.ScaleBullet(this.game));
-    this.weapons.push(new Weapon.Combo1(this.game));
-    this.weapons.push(new Weapon.Combo2(this.game));
+    //Change the background colour
+    this.game.stage.backgroundColor = "#a9f0ff";
 
-    this.currentWeapon = 0;
+    //Add the tilemap and tileset image. The first parameter in addTilesetImage
+    //is the name you gave the tilesheet when importing it into Tiled, the second
+    //is the key to the asset in Phaser
+    this.map = this.game.add.tilemap('tilemap');
+    this.map.addTilesetImage('Desert', 'tiles');
 
-    for (var i = 1; i < this.weapons.length; i++) {
-      this.weapons[i].visible = false;
-    }
+    //Add both the background and ground layers. We won't be doing anything with the
+    //GroundLayer though
+    this.backgroundLayer = this.map.createLayer('BackgroundLayer');
+    this.groundLayer = this.map.createLayer('GroundLayer');
 
-    this.player = this.add.sprite(64, 200, 'player');
-    this.physics.arcade.enable(this.player);
-    this.player.body.collideWorldBounds = true;
-    this.foreground = this.add.tileSprite(0, 0, this.game.width,
-                                          this.game.height, 'foreground');
-    this.foreground.autoScroll(-60, 0);
+    //Before you can use the collide function you need to set what tiles can collide
+    this.map.setCollisionBetween(1, 100, true, 'GroundLayer');
 
-    this.weaponName =
-        this.add.bitmapText(8, 364, 'shmupfont', "ENTER = Next Weapon", 24);
+    //Add the sprite to the game and enable arcade physics on it
+    this.sprite = this.game.add.sprite(50, 1100, 'dude');
+    this.game.physics.arcade.enable(this.sprite);
 
-    //  Cursor keys to fly + space to fire
-    this.cursors = this.input.keyboard.createCursorKeys();
-    this.input.keyboard.addKeyCapture([ Phaser.Keyboard.SPACEBAR ]);
-    var changeKey = this.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-    changeKey.onDown.add(this.nextWeapon, this);
-  }
+    //Change the world size to match the size of this layer
+    this.groundLayer.resizeWorld();
 
-  nextWeapon() {
-    //  Tidy-up the current weapon
-    if (this.currentWeapon > 9) {
-      this.weapons[this.currentWeapon].reset();
-    } else {
-      this.weapons[this.currentWeapon].visible = false;
-      this.weapons[this.currentWeapon].callAll('reset', null, 0, 0);
-      this.weapons[this.currentWeapon].setAll('exists', false);
-    }
+    //Set some physics on the sprite
+    this.sprite.body.bounce.y = 0.2;
+    this.sprite.body.gravity.y = 2000;
+    this.sprite.body.gravity.x = 20;
+    //this.sprite.body.velocity.x = 100;
 
-    //  Activate the new one
-    this.currentWeapon++;
-    if (this.currentWeapon === this.weapons.length) {
-      this.currentWeapon = 0;
-    }
-    this.weapons[this.currentWeapon].visible = true;
-    this.weaponName.text = this.weapons[this.currentWeapon].name;
+    //Create a running animation for the sprite and play it
+    this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
+    this.sprite.animations.play('right');
+
+    //Make the camera follow the sprite
+    this.game.camera.follow(this.sprite);
+
+    //Enable cursor keys so we can create some controls
+    this.cursors = this.game.input.keyboard.createCursorKeys();
   }
 
   update() {
-    this.player.body.velocity.set(0);
+    //Make the sprite collide with the ground layer
+    this.game.physics.arcade.collide(this.sprite, this.groundLayer);
 
-    if (this.cursors.left.isDown) {
-      this.player.body.velocity.x = -this.speed;
-    } else if (this.cursors.right.isDown) {
-      this.player.body.velocity.x = this.speed;
-    }
-
-    if (this.cursors.up.isDown) {
-      this.player.body.velocity.y = -this.speed;
-    } else if (this.cursors.down.isDown) {
-      this.player.body.velocity.y = this.speed;
-    }
-
-    if (this.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-      this.weapons[this.currentWeapon].fire(this.player);
+    //Make the sprite jump when the up key is pushed
+    if(this.cursors.up.isDown) {
+      this.sprite.body.velocity.y = -500;
     }
   }
 }
 
 var game = new Phaser.Game(640, 400, Phaser.AUTO, 'game');
-game.state.add('Game', ShmupGame, true);
+game.state.add('Game', PhaseChangeGame, true);
