@@ -39,14 +39,15 @@ class PhaseChangeGame extends Phaser.State {
 
     //Add both the background and ground layers. We won't be doing anything with the
     //GroundLayer though
-    this.backgroundLayer = this.map.createLayer('BackgroundLayer');
+    //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
     this.groundLayer = this.map.createLayer('GroundLayer');
+    //this.groundLayer.scale.set(0.9,0.9);
 
     //Before you can use the collide function you need to set what tiles can collide
     this.map.setCollisionBetween(1, 100, true, 'GroundLayer');
 
     //Add the sprite to the game and enable arcade physics on it
-    this.sprite = this.game.add.sprite(50, 1100, 'dude');
+    this.sprite = this.game.add.sprite(10, 0, 'dude');
     this.game.physics.arcade.enable(this.sprite);
 
     //Change the world size to match the size of this layer
