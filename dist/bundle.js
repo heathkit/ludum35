@@ -109,7 +109,12 @@
 	    function MainMenu() {
 	        _super.call(this);
 	        this.selected = 0;
-	        this.style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+	        this.style = {
+	            font: "bold 32px Arial",
+	            fill: "#fff",
+	            boundsAlignH: "center",
+	            boundsAlignV: "middle"
+	        };
 	        this.levels = [
 	            'Friday Night',
 	            'TBA',
@@ -118,12 +123,16 @@
 	            'TBA',
 	        ];
 	    }
-	    MainMenu.prototype.preload = function () {
-	    };
+	    MainMenu.prototype.preload = function () { };
 	    MainMenu.prototype.create = function () {
 	        var _this = this;
 	        this.game.stage.backgroundColor = '#337799';
-	        var titleStyle = { font: "bold 46px Arial", fill: "#d30", boundsAlignH: "center", boundsAlignV: "middle" };
+	        var titleStyle = {
+	            font: "bold 46px Arial",
+	            fill: "#d30",
+	            boundsAlignH: "center",
+	            boundsAlignV: "middle"
+	        };
 	        var title = this.game.add.text(0, 0, "Dr. Phase!", titleStyle);
 	        title.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
 	        title.setTextBounds(0, 0, 800, 100);
@@ -132,12 +141,12 @@
 	            this.drawText(this.levels[i], i);
 	        }
 	        ;
-	        //Enable cursor keys so we can create some controls
+	        // Enable cursor keys so we can create some controls
 	        this.cursors = this.game.input.keyboard.createCursorKeys();
 	        this.game.input.onDown.add(function (event) {
 	            var item = Math.floor((_this.game.input.y - 100) / 100);
 	            if (item == 0) {
-	                _this.game.state.start('Level', true, false, ['FridayNight']);
+	                _this.game.state.start('Level', true, false, ['saturday_2']);
 	            }
 	            else {
 	                console.log("Invalid level selected!");
@@ -187,47 +196,27 @@
 	        _super.call(this);
 	        this.debug = false;
 	    }
-	    BaseLevel.prototype.init = function () {
-	    };
 	    BaseLevel.prototype.preload = function () {
-	        this.game.load.spritesheet('dude', 'assets/images/dude.png', 42, 64);
-	        this.game.load.tilemap('tilemap', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
+	        this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
+	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
 	        this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
 	    };
+	    BaseLevel.prototype.init = function (mapName) { this.mapName = mapName; };
 	    BaseLevel.prototype.create = function () {
 	        var _this = this;
-	        //Start the Arcade Physics systems
 	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
-	        //Change the background colour
 	        this.game.stage.backgroundColor = "#a9f0ff";
-	        //Add the tilemap and tileset image. The first parameter in addTilesetImage
-	        //is the name you gave the tilesheet when importing it into Tiled, the second
-	        //is the key to the asset in Phaser
-	        this.map = this.game.add.tilemap('tilemap');
-	        this.map.addTilesetImage('platforms_ducts', 'tiles');
-	        //Add both the background and ground layers. We won't be doing anything with the
-	        //GroundLayer though
-	        this.ductLayer = this.map.createLayer('ducts');
-	        this.platformLayer = this.map.createLayer('platforms');
-	        // Scales the layer, but the sprite ends up clipped.
-	        //this.groundLayer.setScale(0.6,0.6);
-	        //Before you can use the collide function you need to set what tiles can collide
-	        this.map.setCollisionBetween(1, 100, true, 'platforms');
-	        // Create custom collision boxes for the platforms.
-	        console.log(this.map.layers);
-	        this.player = new player_ts_1.Player(this.game);
-	        //Change the world size to match the size of this layer
-	        this.platformLayer.resizeWorld();
-	        //Make the camera follow the sprite
+	        this.map = new Map(this.game, this.mapName);
+	        this.player = new player_ts_1.Player(this.game, this.map);
+	        // Make the camera follow the sprite
 	        this.game.camera.follow(this.player.sprite);
-	        //Enable cursor keys so we can create some controls
+	        // Enable cursor keys so we can create some controls
 	        this.cursors = this.game.input.keyboard.createCursorKeys();
 	        var debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.M);
 	        debugKey.onDown.add(function () { _this.debug = !_this.debug; });
 	    };
 	    BaseLevel.prototype.update = function () {
-	        //Make the sprite collide with the ground layer
-	        this.game.physics.arcade.collide(this.player.sprite, this.platformLayer);
+	        // TODO Instead of passing this directly, allow touch or keyboard input.
 	        this.player.update(this.cursors);
 	        if (this.debug) {
 	            this.game.debug.spriteInfo(this.player.sprite, 32, 32);
@@ -242,6 +231,43 @@
 	    return BaseLevel;
 	}(Phaser.State));
 	exports.BaseLevel = BaseLevel;
+	var Map = (function () {
+	    function Map(game, mapName) {
+	        // Add the tilemap and tileset image. The first parameter in addTilesetImage
+	        // is the name you gave the tilesheet when importing it into Tiled, the
+	        // second
+	        // is the key to the asset in Phaser
+	        this.tileMap = game.add.tilemap(mapName);
+	        this.tileMap.addTilesetImage('platforms_ducts', 'tiles');
+	        // Add both the background and ground layers. We won't be doing anything
+	        // with the
+	        // GroundLayer though
+	        this.ductLayer = this.tileMap.createLayer('ducts');
+	        this.platformLayer = this.tileMap.createLayer('platforms');
+	        // Before you can use the collide function you need to set what tiles can
+	        // collide
+	        this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
+	        // Change the world size to match the size of this layer
+	        this.platformLayer.resizeWorld();
+	        this.makePlatformsOneWay();
+	    }
+	    // Example of how to work with the tilemap to change collision behavior.
+	    Map.prototype.makePlatformsOneWay = function () {
+	        var d = this.tileMap.layers[this.platformLayer.index].data;
+	        console.log(d);
+	        for (var row = 0; row < d.length; row++) {
+	            for (var col = 0; col < d[row].length; col++) {
+	                if (d[row][col].index > 0) {
+	                    d[row][col].collideDown = false;
+	                    d[row][col].collideLeft = false;
+	                    d[row][col].collideRight = false;
+	                }
+	            }
+	        }
+	    };
+	    return Map;
+	}());
+	exports.Map = Map;
 
 
 /***/ },
@@ -249,41 +275,50 @@
 /*!***********************!*\
   !*** ./src/player.ts ***!
   \***********************/
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var Phaser = __webpack_require__(/*! phaser */ 2);
 	var Player = (function () {
-	    function Player(game) {
-	        //Add the sprite to the game and enable arcade physics on it
-	        this.sprite = game.add.sprite(10, 0, 'dude');
-	        game.physics.arcade.enable(this.sprite);
-	        this.sprite.body.setSize(42, 56, 0, 0);
+	    function Player(game, map) {
+	        var _this = this;
+	        this.game = game;
+	        this.map = map;
+	        // Add the sprite to the game and enable arcade physics on it
+	        this.sprite = game.add.sprite(10, 0, 'player');
+	        this.game.physics.arcade.enable(this.sprite);
+	        this.sprite.body.setSize(56, 56, 4, 0);
 	        this.sprite.debug = true;
-	        //Set some physics on the sprite
-	        this.sprite.body.bounce.y = 0.2;
-	        this.sprite.body.gravity.y = 2000;
+	        // Set some physics on the sprite
 	        this.sprite.body.collideWorldBounds = true;
-	        //Create a running animation for the sprite and play it
-	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
-	        this.sprite.animations.add('left', [1, 2, 3, 4], 10, true);
+	        // The different characters are different frames in the same spritesheet.
+	        this.sprite.animations.add('steam', [0, 1, 2, 1], 7, true);
+	        this.sprite.animations.add('water', [3], 10, true);
+	        this.waterState = new Water(this.sprite, this.map);
+	        this.steamState = new Steam(this.sprite, this.map);
+	        var dudeKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+	        var waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+	        var steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+	        // dudeKey.onDown.add(() => {this.changeState()});
+	        waterKey.onDown.add(function () { _this.changeState(_this.waterState); });
+	        steamKey.onDown.add(function () { _this.changeState(_this.steamState); });
+	        // Start as water.
+	        this.changeState(this.waterState);
 	    }
+	    Player.prototype.changeState = function (newState) {
+	        newState.init();
+	        this.currentState = newState;
+	        console.log("Becoming state ", newState);
+	    };
 	    Player.prototype.update = function (cursors) {
-	        //Make the sprite jump when the up key is pushed
-	        if (cursors.up.isDown) {
-	            this.sprite.body.velocity.y = -500;
-	        }
-	        else if (cursors.left.isDown) {
-	            this.sprite.body.velocity.x = -500;
-	            this.sprite.animations.play('left');
-	        }
-	        else if (cursors.right.isDown) {
-	            this.sprite.body.velocity.x = 500;
-	            this.sprite.animations.play('right');
-	        }
-	        else {
-	            this.sprite.body.velocity.x = 0;
-	            this.sprite.animations.stop();
-	        }
+	        // Make the sprite collide with the ground layer
+	        this.game.physics.arcade.collide(this.sprite, this.map.platformLayer);
+	        this.currentState.update(cursors);
 	        // TODO: Remove this hack for falling through the floor.
 	        if (this.sprite.y > 670) {
 	            this.sprite.y = 650;
@@ -294,6 +329,55 @@
 	    return Player;
 	}());
 	exports.Player = Player;
+	var CharacterState = (function () {
+	    function CharacterState(sprite, map) {
+	        this.sprite = sprite;
+	        this.map = map;
+	    }
+	    CharacterState.prototype.init = function () { console.log("Init unimplemented"); };
+	    CharacterState.prototype.update = function (cursors) { console.log("Update unimplemented"); };
+	    return CharacterState;
+	}());
+	var Water = (function (_super) {
+	    __extends(Water, _super);
+	    function Water() {
+	        _super.apply(this, arguments);
+	    }
+	    Water.prototype.init = function () {
+	        this.sprite.animations.play('water');
+	        this.sprite.body.bounce.y = 0.2;
+	        this.sprite.body.gravity.y = 2000;
+	    };
+	    Water.prototype.update = function (cursors) {
+	        // Water can slide around.
+	        if (cursors.left.isDown) {
+	            this.sprite.body.velocity.x = -500;
+	        }
+	        else if (cursors.right.isDown) {
+	            this.sprite.body.velocity.x = 500;
+	        }
+	        else {
+	            this.sprite.body.velocity.x = 0;
+	        }
+	    };
+	    return Water;
+	}(CharacterState));
+	var Steam = (function (_super) {
+	    __extends(Steam, _super);
+	    function Steam() {
+	        _super.apply(this, arguments);
+	    }
+	    Steam.prototype.init = function () {
+	        this.sprite.animations
+	            .play("steam");
+	        this.sprite.body.bounce.y = 0.4;
+	        this.sprite.body.gravity.y = -2000;
+	    };
+	    Steam.prototype.update = function (cursors) {
+	        // Steam just rises.
+	    };
+	    return Steam;
+	}(CharacterState));
 
 
 /***/ }
