@@ -207,7 +207,7 @@
 	        this.map.addTilesetImage('platforms_ducts', 'tiles');
 	        //Add both the background and ground layers. We won't be doing anything with the
 	        //GroundLayer though
-	        //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
+	        this.ductLayer = this.map.createLayer('ducts');
 	        this.platformLayer = this.map.createLayer('platforms');
 	        // Scales the layer, but the sprite ends up clipped.
 	        //this.groundLayer.setScale(0.6,0.6);
@@ -286,7 +286,7 @@
 	        }
 	        // TODO: Remove this hack for falling through the floor.
 	        if (this.sprite.y > 670) {
-	            this.sprite.y = 600;
+	            this.sprite.y = 650;
 	            this.sprite.body.velocity.x = 0;
 	        }
 	        this.sprite.debug = true;
