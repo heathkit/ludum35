@@ -15,7 +15,7 @@ export class BaseLevel extends Phaser.State {
   }
 
   preload() {
-     this.game.load.spritesheet('dude', 'assets/images/dude.png', 42, 64);
+     this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
      this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
      this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
   }
@@ -25,14 +25,10 @@ export class BaseLevel extends Phaser.State {
   }
 
   create() {
-    //Start the Arcade Physics systems
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
-    this.map = new Map(this.game, this.mapName);
-
-    //Change the background colour
     this.game.stage.backgroundColor = "#a9f0ff";
 
+    this.map = new Map(this.game, this.mapName);
     this.player = new Player(this.game, this.map);
 
     //Make the camera follow the sprite
@@ -88,6 +84,7 @@ export class Map {
     this.makePlatformsOneWay();
   }
 
+  // Example of how to work with the tilemap to change collision behavior.
   makePlatformsOneWay() {
     let d = this.tileMap.layers[this.platformLayer.index].data
     console.log(d);

@@ -33,6 +33,7 @@ recharge. (Possibly add an item to give you energy)
 - changing forms
 - getting sucked through vents
 - flowing through pipes
+- animations?
 - get information about the current tile and apply level effects
 
 - Split platforms into back/mid/foreground automatically
