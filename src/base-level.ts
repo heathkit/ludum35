@@ -52,6 +52,17 @@ export class BaseLevel extends Phaser.State {
     // Create custom collision boxes for the platforms.
     console.log(this.map.layers);
 
+    let d = this.map.layers[this.platformLayer.index].data
+    console.log(d);
+    for (let row = 0; row < d.length; row++) {
+      for (let col = 0; col < d[row].length; col++) {
+        if (d[row][col].index > 0) {
+          d[row][col].collideDown = false;
+          d[row][col].collideLeft = false;
+          d[row][col].collideRight = false;
+        }
+      }
+    }
     this.player = new Player(this.game);
 
     //Change the world size to match the size of this layer
