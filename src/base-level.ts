@@ -2,13 +2,10 @@ import * as Phaser from 'phaser';
 import {Player} from './player.ts';
 
 export class BaseLevel extends Phaser.State {
-  sprite: Phaser.Sprite
-  cursors: Phaser.CursorKeys
-
-  player: Player
-  map: Phaser.Tilemap
-  platformLayer: Phaser.TilemapLayer
-  ductLayer: Phaser.TilemapLayer
+  player: Player;
+  map: Map;
+  cursors: Phaser.CursorKeys;
+  mapName: string;
 
   debug: boolean;
 
@@ -17,56 +14,26 @@ export class BaseLevel extends Phaser.State {
     this.debug = false;
   }
 
-  init() {
-  }
-
   preload() {
      this.game.load.spritesheet('dude', 'assets/images/dude.png', 42, 64);
-     this.game.load.tilemap('tilemap', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
+     this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
      this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
+  }
+
+  init(mapName: string) {
+    this.mapName = mapName;
   }
 
   create() {
     //Start the Arcade Physics systems
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
+    this.map = new Map(this.game, this.mapName);
+
     //Change the background colour
     this.game.stage.backgroundColor = "#a9f0ff";
 
-    //Add the tilemap and tileset image. The first parameter in addTilesetImage
-    //is the name you gave the tilesheet when importing it into Tiled, the second
-    //is the key to the asset in Phaser
-    this.map = this.game.add.tilemap('tilemap');
-    this.map.addTilesetImage('platforms_ducts', 'tiles');
-
-    //Add both the background and ground layers. We won't be doing anything with the
-    //GroundLayer though
-    this.ductLayer = this.map.createLayer('ducts');
-    this.platformLayer = this.map.createLayer('platforms');
-
-    // Scales the layer, but the sprite ends up clipped.
-    //this.groundLayer.setScale(0.6,0.6);
-
-    //Before you can use the collide function you need to set what tiles can collide
-    this.map.setCollisionBetween(1, 100, true, 'platforms');
-    // Create custom collision boxes for the platforms.
-    console.log(this.map.layers);
-
-    let d = this.map.layers[this.platformLayer.index].data
-    console.log(d);
-    for (let row = 0; row < d.length; row++) {
-      for (let col = 0; col < d[row].length; col++) {
-        if (d[row][col].index > 0) {
-          d[row][col].collideDown = false;
-          d[row][col].collideLeft = false;
-          d[row][col].collideRight = false;
-        }
-      }
-    }
-    this.player = new Player(this.game);
-
-    //Change the world size to match the size of this layer
-    this.platformLayer.resizeWorld();
+    this.player = new Player(this.game, this.map);
 
     //Make the camera follow the sprite
     this.game.camera.follow(this.player.sprite);
@@ -78,11 +45,8 @@ export class BaseLevel extends Phaser.State {
     debugKey.onDown.add(() => {this.debug = !this.debug});
   }
 
-
   update() {
-    //Make the sprite collide with the ground layer
-    this.game.physics.arcade.collide(this.player.sprite, this.platformLayer);
-
+    // TODO Instead of passing this directly, allow touch or keyboard input.
     this.player.update(this.cursors);
     if (this.debug) {
       this.game.debug.spriteInfo(this.player.sprite,32,32);
@@ -93,6 +57,48 @@ export class BaseLevel extends Phaser.State {
     // Enable debugging for player body.
     if (this.debug) {
       this.game.debug.body(this.player.sprite);
+    }
+  }
+}
+
+export class Map {
+  tileMap: Phaser.Tilemap;
+
+  platformLayer: Phaser.TilemapLayer;
+  ductLayer: Phaser.TilemapLayer;
+
+  constructor(game: Phaser.Game, mapName: string) {
+    //Add the tilemap and tileset image. The first parameter in addTilesetImage
+    //is the name you gave the tilesheet when importing it into Tiled, the second
+    //is the key to the asset in Phaser
+    this.tileMap = game.add.tilemap(mapName);
+    this.tileMap.addTilesetImage('platforms_ducts', 'tiles');
+
+    //Add both the background and ground layers. We won't be doing anything with the
+    //GroundLayer though
+    this.ductLayer = this.tileMap.createLayer('ducts');
+    this.platformLayer = this.tileMap.createLayer('platforms');
+
+    //Before you can use the collide function you need to set what tiles can collide
+    this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
+
+    //Change the world size to match the size of this layer
+    this.platformLayer.resizeWorld();
+
+    this.makePlatformsOneWay();
+  }
+
+  makePlatformsOneWay() {
+    let d = this.tileMap.layers[this.platformLayer.index].data
+    console.log(d);
+    for (let row = 0; row < d.length; row++) {
+      for (let col = 0; col < d[row].length; col++) {
+        if (d[row][col].index > 0) {
+          d[row][col].collideDown = false;
+          d[row][col].collideLeft = false;
+          d[row][col].collideRight = false;
+        }
+      }
     }
   }
 }
