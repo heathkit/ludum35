@@ -180,19 +180,22 @@
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
 	var Phaser = __webpack_require__(/*! phaser */ 2);
+	var player_ts_1 = __webpack_require__(/*! ./player.ts */ 5);
 	var BaseLevel = (function (_super) {
 	    __extends(BaseLevel, _super);
 	    function BaseLevel() {
 	        _super.call(this);
+	        this.debug = false;
 	    }
 	    BaseLevel.prototype.init = function () {
 	    };
 	    BaseLevel.prototype.preload = function () {
-	        this.game.load.spritesheet('dude', 'assets/images/dude.png', 32, 48);
-	        this.game.load.tilemap('tilemap', 'assets/friday_night.json', null, Phaser.Tilemap.TILED_JSON);
-	        this.game.load.image('tiles', 'assets/friday_night_tilesheet.png');
+	        this.game.load.spritesheet('dude', 'assets/images/dude.png', 42, 64);
+	        this.game.load.tilemap('tilemap', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
+	        this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
 	    };
 	    BaseLevel.prototype.create = function () {
+	        var _this = this;
 	        //Start the Arcade Physics systems
 	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
 	        //Change the background colour
@@ -201,21 +204,61 @@
 	        //is the name you gave the tilesheet when importing it into Tiled, the second
 	        //is the key to the asset in Phaser
 	        this.map = this.game.add.tilemap('tilemap');
-	        this.map.addTilesetImage('platform', 'tiles');
+	        this.map.addTilesetImage('platforms_ducts', 'tiles');
 	        //Add both the background and ground layers. We won't be doing anything with the
 	        //GroundLayer though
 	        //this.backgroundLayer = this.map.createLayer('BackgroundLayer');
-	        this.groundLayer = this.map.createLayer('platform');
-	        //this.groundLayer.scale.set(0.9,0.9);
+	        this.platformLayer = this.map.createLayer('platforms');
+	        // Scales the layer, but the sprite ends up clipped.
+	        //this.groundLayer.setScale(0.6,0.6);
 	        //Before you can use the collide function you need to set what tiles can collide
-	        this.map.setCollisionBetween(1, 100, true, 'platform');
-	        //Add the sprite to the game and enable arcade physics on it
-	        this.sprite = this.game.add.sprite(10, 0, 'dude');
-	        this.game.physics.arcade.enable(this.sprite);
-	        this.sprite.body.setSize(32, 32, 0, -8);
-	        this.sprite.debug = true;
+	        this.map.setCollisionBetween(1, 100, true, 'platforms');
+	        // Create custom collision boxes for the platforms.
+	        console.log(this.map.layers);
+	        this.player = new player_ts_1.Player(this.game);
 	        //Change the world size to match the size of this layer
-	        this.groundLayer.resizeWorld();
+	        this.platformLayer.resizeWorld();
+	        //Make the camera follow the sprite
+	        this.game.camera.follow(this.player.sprite);
+	        //Enable cursor keys so we can create some controls
+	        this.cursors = this.game.input.keyboard.createCursorKeys();
+	        var debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.M);
+	        debugKey.onDown.add(function () { _this.debug = !_this.debug; });
+	    };
+	    BaseLevel.prototype.update = function () {
+	        //Make the sprite collide with the ground layer
+	        this.game.physics.arcade.collide(this.player.sprite, this.platformLayer);
+	        this.player.update(this.cursors);
+	        if (this.debug) {
+	            this.game.debug.spriteInfo(this.player.sprite, 32, 32);
+	        }
+	    };
+	    BaseLevel.prototype.render = function () {
+	        // Enable debugging for player body.
+	        if (this.debug) {
+	            this.game.debug.body(this.player.sprite);
+	        }
+	    };
+	    return BaseLevel;
+	}(Phaser.State));
+	exports.BaseLevel = BaseLevel;
+
+
+/***/ },
+/* 5 */
+/*!***********************!*\
+  !*** ./src/player.ts ***!
+  \***********************/
+/***/ function(module, exports) {
+
+	"use strict";
+	var Player = (function () {
+	    function Player(game) {
+	        //Add the sprite to the game and enable arcade physics on it
+	        this.sprite = game.add.sprite(10, 0, 'dude');
+	        game.physics.arcade.enable(this.sprite);
+	        this.sprite.body.setSize(42, 56, 0, 0);
+	        this.sprite.debug = true;
 	        //Set some physics on the sprite
 	        this.sprite.body.bounce.y = 0.2;
 	        this.sprite.body.gravity.y = 2000;
@@ -223,23 +266,17 @@
 	        //Create a running animation for the sprite and play it
 	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
 	        this.sprite.animations.add('left', [1, 2, 3, 4], 10, true);
-	        //Make the camera follow the sprite
-	        this.game.camera.follow(this.sprite);
-	        //Enable cursor keys so we can create some controls
-	        this.cursors = this.game.input.keyboard.createCursorKeys();
-	    };
-	    BaseLevel.prototype.update = function () {
-	        //Make the sprite collide with the ground layer
-	        this.game.physics.arcade.collide(this.sprite, this.groundLayer);
+	    }
+	    Player.prototype.update = function (cursors) {
 	        //Make the sprite jump when the up key is pushed
-	        if (this.cursors.up.isDown) {
+	        if (cursors.up.isDown) {
 	            this.sprite.body.velocity.y = -500;
 	        }
-	        else if (this.cursors.left.isDown) {
+	        else if (cursors.left.isDown) {
 	            this.sprite.body.velocity.x = -500;
 	            this.sprite.animations.play('left');
 	        }
-	        else if (this.cursors.right.isDown) {
+	        else if (cursors.right.isDown) {
 	            this.sprite.body.velocity.x = 500;
 	            this.sprite.animations.play('right');
 	        }
@@ -248,16 +285,15 @@
 	            this.sprite.animations.stop();
 	        }
 	        // TODO: Remove this hack for falling through the floor.
-	        if (this.sprite.y > 1100) {
-	            this.sprite.y = 1000;
+	        if (this.sprite.y > 670) {
+	            this.sprite.y = 600;
 	            this.sprite.body.velocity.x = 0;
 	        }
 	        this.sprite.debug = true;
-	        this.game.debug.spriteInfo(this.sprite, 32, 32);
 	    };
-	    return BaseLevel;
-	}(Phaser.State));
-	exports.BaseLevel = BaseLevel;
+	    return Player;
+	}());
+	exports.Player = Player;
 
 
 /***/ }
