@@ -5,9 +5,7 @@ import {MainMenu} from './main-menu.ts';
 import {BaseLevel} from './base-level.ts';
 
 class DrPhase extends Phaser.Game {
-    constructor(width, height, game, name) {
-      super(width, height,game, name);
-    }
+  constructor(width, height, game, name) { super(width, height, game, name); }
 }
 
 var game = new DrPhase(800, 600, Phaser.AUTO, 'game');

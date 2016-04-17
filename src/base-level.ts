@@ -15,14 +15,14 @@ export class BaseLevel extends Phaser.State {
   }
 
   preload() {
-     this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
-     this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
-     this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
+    this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64,
+                               64);
+    this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
+                           Phaser.Tilemap.TILED_JSON);
+    this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
   }
 
-  init(mapName: string) {
-    this.mapName = mapName;
-  }
+  init(mapName: string) { this.mapName = mapName; }
 
   create() {
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -31,10 +31,10 @@ export class BaseLevel extends Phaser.State {
     this.map = new Map(this.game, this.mapName);
     this.player = new Player(this.game, this.map);
 
-    //Make the camera follow the sprite
+    // Make the camera follow the sprite
     this.game.camera.follow(this.player.sprite);
 
-    //Enable cursor keys so we can create some controls
+    // Enable cursor keys so we can create some controls
     this.cursors = this.game.input.keyboard.createCursorKeys();
 
     let debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.M);
@@ -45,7 +45,7 @@ export class BaseLevel extends Phaser.State {
     // TODO Instead of passing this directly, allow touch or keyboard input.
     this.player.update(this.cursors);
     if (this.debug) {
-      this.game.debug.spriteInfo(this.player.sprite,32,32);
+      this.game.debug.spriteInfo(this.player.sprite, 32, 32);
     }
   }
 
@@ -64,21 +64,24 @@ export class Map {
   ductLayer: Phaser.TilemapLayer;
 
   constructor(game: Phaser.Game, mapName: string) {
-    //Add the tilemap and tileset image. The first parameter in addTilesetImage
-    //is the name you gave the tilesheet when importing it into Tiled, the second
-    //is the key to the asset in Phaser
+    // Add the tilemap and tileset image. The first parameter in addTilesetImage
+    // is the name you gave the tilesheet when importing it into Tiled, the
+    // second
+    // is the key to the asset in Phaser
     this.tileMap = game.add.tilemap(mapName);
     this.tileMap.addTilesetImage('platforms_ducts', 'tiles');
 
-    //Add both the background and ground layers. We won't be doing anything with the
-    //GroundLayer though
+    // Add both the background and ground layers. We won't be doing anything
+    // with the
+    // GroundLayer though
     this.ductLayer = this.tileMap.createLayer('ducts');
     this.platformLayer = this.tileMap.createLayer('platforms');
 
-    //Before you can use the collide function you need to set what tiles can collide
+    // Before you can use the collide function you need to set what tiles can
+    // collide
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
-    //Change the world size to match the size of this layer
+    // Change the world size to match the size of this layer
     this.platformLayer.resizeWorld();
 
     this.makePlatformsOneWay();

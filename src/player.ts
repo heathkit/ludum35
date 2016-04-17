@@ -14,18 +14,18 @@ export class Player {
     this.game = game;
     this.map = map;
 
-    //Add the sprite to the game and enable arcade physics on it
+    // Add the sprite to the game and enable arcade physics on it
     this.sprite = game.add.sprite(10, 0, 'player');
     this.game.physics.arcade.enable(this.sprite);
-    this.sprite.body.setSize(56,56,4,0);
+    this.sprite.body.setSize(48, 56, 8, 0);
     this.sprite.debug = true;
 
-    //Set some physics on the sprite
+    // Set some physics on the sprite
     this.sprite.body.collideWorldBounds = true;
 
     // The different characters are different frames in the same spritesheet.
-    this.sprite.animations.add('steam', [0, 1, 2, 1], 7, true);
-    this.sprite.animations.add('water', [3], 10, true);
+    this.sprite.animations.add('steam', [ 0, 1, 2, 1 ], 7, true);
+    this.sprite.animations.add('water', [ 3 ], 10, true);
 
     this.waterState = new Water(this.sprite, this.map);
     this.steamState = new Steam(this.sprite, this.map);
@@ -34,7 +34,7 @@ export class Player {
     let waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
     let steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
 
-    //dudeKey.onDown.add(() => {this.changeState()});
+    // dudeKey.onDown.add(() => {this.changeState()});
     waterKey.onDown.add(() => {this.changeState(this.waterState)});
     steamKey.onDown.add(() => {this.changeState(this.steamState)});
 
@@ -49,18 +49,19 @@ export class Player {
   }
 
   update(cursors: Phaser.CursorKeys) {
-    //Make the sprite collide with the ground layer
+    // Make the sprite collide with the ground layer
     this.game.physics.arcade.collide(this.sprite, this.map.platformLayer);
 
     this.currentState.update(cursors);
 
-    // TODO: Remove this hack for falling through the floor.
+    // Clamp velocity so we don't clip through platforms.
+    this.sprite.body.velocity.y = Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
+
+    // TODO: Determine bottom of the level from the map.
     if (this.sprite.y > 670) {
       this.sprite.y = 650;
       this.sprite.body.velocity.x = 0;
     }
-
-    this.sprite.debug = true;
   }
 }
 
@@ -69,17 +70,13 @@ class CharacterState {
   map: Map
 
   constructor(sprite: Phaser.Sprite, map: Map) {
-      this.sprite = sprite;
-      this.map = map;
+    this.sprite = sprite;
+    this.map = map;
   }
 
-  init() {
-    console.log("Init unimplemented")
-  }
+  init() { console.log("Init unimplemented") }
 
-  update(cursors: Phaser.CursorKeys) {
-    console.log("Update unimplemented")
-  }
+  update(cursors: Phaser.CursorKeys) { console.log("Update unimplemented") }
 }
 
 class Water extends CharacterState {
@@ -92,24 +89,28 @@ class Water extends CharacterState {
 
   update(cursors: Phaser.CursorKeys) {
     // Water can slide around.
-    if(cursors.left.isDown) {
+    if (cursors.left.isDown) {
       this.sprite.body.velocity.x = -500;
-    } else if(cursors.right.isDown) {
+    } else if (cursors.right.isDown) {
       this.sprite.body.velocity.x = 500;
     } else {
       this.sprite.body.velocity.x = 0;
     }
+
   }
 }
 
 class Steam extends CharacterState {
   init() {
-    this.sprite.animations.play("steam")
+    this.sprite.animations
+        .play("steam")
 
-    this.sprite.body.bounce.y = 0.4;
+            this.sprite.body.bounce.y = 0.4;
     this.sprite.body.gravity.y = -2000;
   }
   update(cursors: Phaser.CursorKeys) {
     // Steam just rises.
+
+    // If we pass by a vent, get sucked into the ducts.
   }
 }
