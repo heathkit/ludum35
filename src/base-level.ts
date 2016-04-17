@@ -1,10 +1,11 @@
-
 import * as Phaser from 'phaser';
+import {Player} from './player.ts';
 
 export class BaseLevel extends Phaser.State {
   sprite: Phaser.Sprite
   cursors: Phaser.CursorKeys
 
+  player: Player
   map: Phaser.Tilemap
   backgroundLayer: Phaser.TilemapLayer
   groundLayer: Phaser.TilemapLayer
@@ -44,26 +45,13 @@ export class BaseLevel extends Phaser.State {
     //Before you can use the collide function you need to set what tiles can collide
     this.map.setCollisionBetween(1, 100, true, 'platform');
 
-    //Add the sprite to the game and enable arcade physics on it
-    this.sprite = this.game.add.sprite(10, 0, 'dude');
-    this.game.physics.arcade.enable(this.sprite);
-    this.sprite.body.setSize(32,32,0,-8);
-    this.sprite.debug = true;
+    this.player = new Player(this.game);
 
     //Change the world size to match the size of this layer
     this.groundLayer.resizeWorld();
 
-    //Set some physics on the sprite
-    this.sprite.body.bounce.y = 0.2;
-    this.sprite.body.gravity.y = 2000;
-    this.sprite.body.collideWorldBounds = true;
-
-    //Create a running animation for the sprite and play it
-    this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
-    this.sprite.animations.add('left', [1, 2, 3, 4], 10, true);
-
     //Make the camera follow the sprite
-    this.game.camera.follow(this.sprite);
+    this.game.camera.follow(this.player.sprite);
 
     //Enable cursor keys so we can create some controls
     this.cursors = this.game.input.keyboard.createCursorKeys();
@@ -71,30 +59,15 @@ export class BaseLevel extends Phaser.State {
 
   update() {
     //Make the sprite collide with the ground layer
-    this.game.physics.arcade.collide(this.sprite, this.groundLayer);
+    this.game.physics.arcade.collide(this.player.sprite, this.groundLayer);
 
-    //Make the sprite jump when the up key is pushed
-    if(this.cursors.up.isDown) {
-      this.sprite.body.velocity.y = -500;
-    } else if(this.cursors.left.isDown) {
-      this.sprite.body.velocity.x = -500;
-      this.sprite.animations.play('left');
-    } else if(this.cursors.right.isDown) {
-      this.sprite.body.velocity.x = 500;
-      this.sprite.animations.play('right');
-    } else {
-      this.sprite.body.velocity.x = 0;
-      this.sprite.animations.stop();
-    }
+    this.player.update(this.cursors);
+    //this.game.debug.spriteInfo(this.sprite,32,32);
 
-    // TODO: Remove this hack for falling through the floor.
-    if (this.sprite.y > 1100) {
-      this.sprite.y = 1000;
-      this.sprite.body.velocity.x = 0;
-    }
+  }
 
-    this.sprite.debug = true;
-    this.game.debug.spriteInfo(this.sprite,32,32);
-
+  render() {
+    // Enable debugging for player body.
+    //this.game.debug.body(this.sprite);
   }
 }

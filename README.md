@@ -30,8 +30,7 @@ recharge. (Possibly add an item to give you energy)
 - will smash through certain floor tiles when falling
 
 ## TODO
-- level selection
-- handrawn level example
+- get information about the current tile and apply level effects
 - changing forms
 
 ## Phaser stuff
