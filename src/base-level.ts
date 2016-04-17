@@ -28,6 +28,10 @@ export class BaseLevel extends Phaser.State {
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
     this.game.stage.backgroundColor = "#a9f0ff";
 
+    // Possible fix for jittery sprites.
+    // See http://www.html5gamedevs.com/topic/15266-phaser-camera-jittering/
+    this.game.renderer.renderSession.roundPixels = true;
+
     this.map = new Map(this.game, this.mapName);
     this.player = new Player(this.game, this.map);
 
