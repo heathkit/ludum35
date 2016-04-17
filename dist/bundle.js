@@ -212,15 +212,14 @@
 	        //Add the sprite to the game and enable arcade physics on it
 	        this.sprite = this.game.add.sprite(10, 0, 'dude');
 	        this.game.physics.arcade.enable(this.sprite);
-	        this.sprite.body.setSize(32, 48, 0, -18);
+	        this.sprite.body.setSize(32, 32, 0, -8);
 	        this.sprite.debug = true;
 	        //Change the world size to match the size of this layer
 	        this.groundLayer.resizeWorld();
 	        //Set some physics on the sprite
 	        this.sprite.body.bounce.y = 0.2;
 	        this.sprite.body.gravity.y = 2000;
-	        //this.sprite.body.gravity.x = 20;
-	        //this.sprite.body.velocity.x = 100;
+	        this.sprite.body.collideWorldBounds = true;
 	        //Create a running animation for the sprite and play it
 	        this.sprite.animations.add('right', [5, 6, 7, 8], 10, true);
 	        this.sprite.animations.add('left', [1, 2, 3, 4], 10, true);
@@ -251,7 +250,10 @@
 	        // TODO: Remove this hack for falling through the floor.
 	        if (this.sprite.y > 1100) {
 	            this.sprite.y = 1000;
+	            this.sprite.body.velocity.x = 0;
 	        }
+	        this.sprite.debug = true;
+	        this.game.debug.spriteInfo(this.sprite, 32, 32);
 	    };
 	    return BaseLevel;
 	}(Phaser.State));
