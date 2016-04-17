@@ -292,7 +292,7 @@
 	        // Add the sprite to the game and enable arcade physics on it
 	        this.sprite = game.add.sprite(10, 0, 'player');
 	        this.game.physics.arcade.enable(this.sprite);
-	        this.sprite.body.setSize(56, 56, 4, 0);
+	        this.sprite.body.setSize(48, 56, 8, 0);
 	        this.sprite.debug = true;
 	        // Set some physics on the sprite
 	        this.sprite.body.collideWorldBounds = true;
@@ -319,12 +319,13 @@
 	        // Make the sprite collide with the ground layer
 	        this.game.physics.arcade.collide(this.sprite, this.map.platformLayer);
 	        this.currentState.update(cursors);
-	        // TODO: Remove this hack for falling through the floor.
+	        // Clamp velocity so we don't clip through platforms.
+	        this.sprite.body.velocity.y = Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
+	        // TODO: Determine bottom of the level from the map.
 	        if (this.sprite.y > 670) {
 	            this.sprite.y = 650;
 	            this.sprite.body.velocity.x = 0;
 	        }
-	        this.sprite.debug = true;
 	    };
 	    return Player;
 	}());
@@ -375,6 +376,7 @@
 	    };
 	    Steam.prototype.update = function (cursors) {
 	        // Steam just rises.
+	        // If we pass by a vent, get sucked into the ducts.
 	    };
 	    return Steam;
 	}(CharacterState));
