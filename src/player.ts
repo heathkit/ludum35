@@ -17,7 +17,7 @@ export class Player {
     // Add the sprite to the game and enable arcade physics on it
     this.sprite = game.add.sprite(10, 0, 'player');
     this.game.physics.arcade.enable(this.sprite);
-    this.sprite.body.setSize(48, 56, 8, 0);
+    this.sprite.body.setSize(48, 48, 8, 6);
     this.sprite.debug = true;
 
     // Set some physics on the sprite
