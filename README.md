@@ -30,8 +30,20 @@ recharge. (Possibly add an item to give you energy)
 - will smash through certain floor tiles when falling
 
 ## TODO
-- get information about the current tile and apply level effects
 - changing forms
+- getting sucked through vents
+- flowing through pipes
+- get information about the current tile and apply level effects
+
+- Split platforms into back/mid/foreground automatically
+- energy bar for being in a particular form
+
+### Elements
+ductwork
+fans
+pipes
+grates
+pushers?
 
 ## Phaser stuff
 Camera deadzone: http://phaser.io/examples/v2/camera/deadzone

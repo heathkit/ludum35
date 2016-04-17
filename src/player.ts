@@ -7,7 +7,7 @@ export class Player {
     //Add the sprite to the game and enable arcade physics on it
     this.sprite = game.add.sprite(10, 0, 'dude');
     game.physics.arcade.enable(this.sprite);
-    this.sprite.body.setSize(32,32,0,-8);
+    this.sprite.body.setSize(42,56,0,0);
     this.sprite.debug = true;
 
     //Set some physics on the sprite
@@ -36,11 +36,11 @@ export class Player {
     }
 
     // TODO: Remove this hack for falling through the floor.
-    if (this.sprite.y > 1100) {
-      this.sprite.y = 1000;
+    if (this.sprite.y > 670) {
+      this.sprite.y = 650;
       this.sprite.body.velocity.x = 0;
     }
-    
+ 
     this.sprite.debug = true;
   }
 
