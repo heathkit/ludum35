@@ -30,9 +30,9 @@ recharge. (Possibly add an item to give you energy)
 - ?will smash through certain floor tiles when falling
 
 ## TODO
-- Death on falling through pits
 - Drain collision for water
-- Ice and steam are pushed by fans
+- Better death
+- Instructions on front page
 - follow pipes and drains instead of jumping to exit
 - Some kind of hud?
 

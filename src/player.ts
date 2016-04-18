@@ -108,6 +108,7 @@ class Ice extends CharacterState {
   update(cursors: Phaser.CursorKeys) {
     // Ice collides with platforms but cannot be controlled.
     this.map.collidePlatforms(this.sprite, false);
+    this.map.collideFans(this.sprite);
   }
 }
 
@@ -234,6 +235,7 @@ class Steam extends CharacterState {
     if (!this.teleporting) {
       this.map.collideDucts(this.sprite);
       this.map.collidePlatforms(this.sprite, true);
+      this.map.collideFans(this.sprite);
     }
   }
 }

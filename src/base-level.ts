@@ -131,6 +131,8 @@ export class Map {
 
   ventCallback: (from: Phaser.Point, to: Phaser.Point) => void;
   private lastVentEventSent: number;
+  left_fans: Phaser.Group;
+  right_fans: Phaser.Group;
 
   // Special tile flags
   private overVent: boolean;
@@ -151,33 +153,31 @@ export class Map {
     this.tileMap.addTilesetImage('grates', 'grates');
     this.tileMap.addTilesetImage('pipes', 'pipes');
 
-    // Add both the background and ground layers. We won't be doing anything
-    // with the
-    // GroundLayer though
+    // Add the duct and platform layers.
     this.ductLayer = this.tileMap.createLayer('ducts');
     this.platformLayer = this.tileMap.createLayer('platforms');
 
     // Load in the fans and start them spinning.
-    let left_fans = this.game.add.group();
-    this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 0, true, false, left_fans);
+    this.left_fans = this.game.add.group();
+    this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 2, true, false, this.left_fans);
 
-    let right_fans = this.game.add.group();
-    this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 2, true, false, right_fans);
+    this.right_fans = this.game.add.group();
+    this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 0, true, false, this.right_fans);
 
-    //  Add animations to all of the coin sprites
-    left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1],
+    // Set up animations for the fans.
+    this.left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1],
       10, true);
-    left_fans.callAll('animations.play', 'animations', 'left_spin');
+    this.left_fans.callAll('animations.play', 'animations', 'left_spin');
 
-    right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3],
+    this.right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3],
       10, true);
-    right_fans.callAll('animations.play', 'animations', 'right_spin');
+    this.right_fans.callAll('animations.play', 'animations', 'right_spin');
 
     // Before you can use the collide function you need to set what tiles can
-    // collide
+    // collide.
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
-    // Exclude pipe tiles from collsion on the duct layer.
+    // Exclude non-vent tiles from collsion on the duct layer.
     this.tileMap.setCollisionByExclusion([DUCT_IDX], true, 'ducts');
 
     // Change the world size to match the size of this layer
@@ -243,6 +243,40 @@ export class Map {
 
   collideDucts(sprite: Phaser.Sprite) {
     this.game.physics.arcade.collide(sprite, this.ductLayer);
+  }
+
+  collideFans(sprite: Phaser.Sprite) {
+    // Fans will blow a sprite away from them if they're inline.
+    // Fans are only effective within 3 tiles.
+
+    let range = 5*this.tileMap.tileWidth;
+
+    let fanCollisionLeft = new Phaser.Rectangle(sprite.x - range, sprite.y,
+      range, sprite.height);
+    let fanCollisionRight = new Phaser.Rectangle(sprite.x + sprite.width,
+      sprite.y, range, sprite.height);
+
+    //this.game.debug.renderRectangle(fanCollisionLeft, "#00ff00");
+    //this.game.debug.renderRectangle(fanCollisionRight, "#00ff00");
+
+    // look to the right for fans blowing to the left.
+    this.left_fans.forEach((fan: Phaser.Sprite) => {
+      let fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
+      if (fanCollisionLeft.intersects(fanBox, 0.1)) {
+        let dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+        sprite.body.velocity.x += 1000 / dist;
+      }
+    }, null);
+
+    // and to the left for fans blowing to the right.
+    this.right_fans.forEach((fan: Phaser.Sprite) => {
+      let fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
+      if (fanCollisionRight.intersects(fanBox, 0.1)) {
+        let dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+        sprite.body.velocity.x -= 1000 / dist;
+      }
+    }, null);
+
   }
 
   // Example of how to work with the tilemap to change collision behavior.
