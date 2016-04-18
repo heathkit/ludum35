@@ -280,6 +280,8 @@
 	        GRATE_IDX = 12;
 	        LEFT_FAN_IDX = 7;
 	        RIGHT_FAN_IDX = 9;
+	        DRAIN_IDX = 14;
+	        DRAIN_EXIT = new Phaser.Point(30, 8);
 	        this.map = new Map(this.game, 'sunday');
 	        _super.prototype.create.call(this);
 	    };
@@ -293,6 +295,8 @@
 	var LEFT_FAN_IDX;
 	var RIGHT_FAN_IDX;
 	var DUCT_IDX;
+	var DRAIN_IDX;
+	var DRAIN_EXIT;
 	var Map = (function () {
 	    function Map(game, mapName) {
 	        this.overVent = false;
@@ -328,6 +332,7 @@
 	        // Change the world size to match the size of this layer
 	        this.platformLayer.resizeWorld();
 	        this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX], this.onVentHit, this, 'ducts');
+	        this.tileMap.setTileIndexCallback([DRAIN_IDX], this.onDrainHit, this, 'platforms');
 	    }
 	    // Callback triggered when a sprite collides with a vent.
 	    Map.prototype.onVentHit = function (sprite, tile) {
@@ -354,6 +359,8 @@
 	    };
 	    // Given a vent tile, find the other vent tile in this map.
 	    Map.prototype.getOtherVent = function (tile) {
+	        // TODO Really, this is wrong. Instead, we should follow the duct until we
+	        // hit the exit, moving the player sprite along the way.
 	        var exitType = LEFT_VENT_IDX;
 	        if (tile.index == LEFT_VENT_IDX) {
 	            exitType = RIGHT_VENT_IDX;
@@ -368,6 +375,14 @@
 	            }
 	        }
 	    };
+	    // Callback triggered when a sprite collides with a drain.
+	    Map.prototype.onDrainHit = function (sprite, tile) {
+	        if ((Math.abs(sprite.x - tile.worldX) < 10) && this.drainCallback) {
+	            var exitTile = this.tileMap.getTile(DRAIN_EXIT.x, DRAIN_EXIT.y, 'platforms', true);
+	            this.drainCallback(new Phaser.Point(exitTile.worldX, exitTile.worldY));
+	        }
+	        return true;
+	    };
 	    Map.prototype.collidePlatforms = function (sprite, skipGrates) {
 	        this.game.physics.arcade.collide(sprite, this.platformLayer, null, function (sprite, tile) {
 	            if (skipGrates && tile.index == GRATE_IDX) {
@@ -381,12 +396,10 @@
 	    };
 	    Map.prototype.collideFans = function (sprite) {
 	        // Fans will blow a sprite away from them if they're inline.
-	        // Fans are only effective within 3 tiles.
+	        // Fans are only effective within 5 tiles.
 	        var range = 5 * this.tileMap.tileWidth;
 	        var fanCollisionLeft = new Phaser.Rectangle(sprite.x - range, sprite.y, range, sprite.height);
 	        var fanCollisionRight = new Phaser.Rectangle(sprite.x + sprite.width, sprite.y, range, sprite.height);
-	        //this.game.debug.renderRectangle(fanCollisionLeft, "#00ff00");
-	        //this.game.debug.renderRectangle(fanCollisionRight, "#00ff00");
 	        // look to the right for fans blowing to the left.
 	        this.left_fans.forEach(function (fan) {
 	            var fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
@@ -453,7 +466,7 @@
 	        // The different characters are different frames in the same spritesheet.
 	        this.sprite.animations.add('steam', [5, 6, 7, 6], 7, true);
 	        this.sprite.animations.add('water', [1], 0, false);
-	        this.sprite.animations.add('water_drain', [1, 2, 3], 3, false);
+	        this.sprite.animations.add('water_drain', [1, 2, 3], 8, false);
 	        this.sprite.animations.add('ice', [0], 10, true);
 	        this.waterState = new Water(this.sprite, this.map, this.game);
 	        this.steamState = new Steam(this.sprite, this.map, this.game);
@@ -461,7 +474,6 @@
 	        var waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
 	        var steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
 	        var iceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
-	        // dudeKey.onDown.add(() => {this.changeState()});
 	        waterKey.onDown.add(function () { _this.changeState(_this.waterState); });
 	        steamKey.onDown.add(function () { _this.changeState(_this.steamState); });
 	        iceKey.onDown.add(function () { _this.changeState(_this.iceState); });
@@ -477,7 +489,6 @@
 	        }
 	        newState.init();
 	        this.currentState = newState;
-	        console.log("Becoming state ", newState);
 	    };
 	    Player.prototype.update = function (cursors) {
 	        this.currentState.update(cursors);
@@ -507,6 +518,11 @@
 	    // Clean up the state before switching. Will
 	    // return false if the state does not allow switching.
 	    CharacterState.prototype.cleanup = function () { return true; };
+	    CharacterState.prototype.disablePhysics = function () {
+	        this.sprite.body.gravity.y = 0;
+	        this.sprite.body.velocity.y = 0;
+	        this.sprite.body.velocity.x = 0;
+	    };
 	    return CharacterState;
 	}());
 	var Ice = (function (_super) {
@@ -532,23 +548,62 @@
 	        _super.apply(this, arguments);
 	    }
 	    Water.prototype.init = function () {
+	        var _this = this;
+	        this.teleporting = false;
 	        this.sprite.animations.play('water');
+	        this.startPhysics();
+	        this.map.drainCallback = function (to) {
+	            _this.teleportThroughDrain(to);
+	        };
+	    };
+	    Water.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.2;
 	        this.sprite.body.gravity.y = 1500;
+	    };
+	    Water.prototype.teleportThroughDrain = function (to) {
+	        var _this = this;
+	        if (this.teleporting) {
+	            return;
+	        }
+	        console.log("Flowing through drain");
+	        this.teleporting = true;
+	        this.disablePhysics();
+	        var anim = this.sprite.animations.getAnimation('water_drain');
+	        var moveToExit = this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.In);
+	        moveToExit.onComplete.add(function () {
+	            _this.teleporting = false;
+	            _this.startPhysics();
+	            _this.sprite.animations.play("water");
+	            _this.sprite.visible = true;
+	        });
+	        anim.onComplete.add(function () {
+	            _this.sprite.visible = false;
+	            moveToExit.start();
+	        });
+	        anim.play();
 	    };
 	    Water.prototype.update = function (cursors) {
 	        // Make the sprite collide with the ground layer
 	        this.map.collidePlatforms(this.sprite, true);
-	        // Water can slide around.
-	        if (cursors.left.isDown) {
-	            this.sprite.body.velocity.x = -500;
+	        if (!this.teleporting) {
+	            // Water can slide around.
+	            if (cursors.left.isDown) {
+	                this.sprite.body.velocity.x = -500;
+	            }
+	            else if (cursors.right.isDown) {
+	                this.sprite.body.velocity.x = 500;
+	            }
+	            else {
+	                this.sprite.body.velocity.x = 0;
+	            }
 	        }
-	        else if (cursors.right.isDown) {
-	            this.sprite.body.velocity.x = 500;
+	    };
+	    Water.prototype.cleanup = function () {
+	        if (this.teleporting) {
+	            return false;
 	        }
-	        else {
-	            this.sprite.body.velocity.x = 0;
-	        }
+	        this.map.drainCallback = undefined;
+	        return true;
 	    };
 	    return Water;
 	}(CharacterState));
@@ -582,11 +637,6 @@
 	    Steam.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.4;
 	        this.sprite.body.gravity.y = -1000;
-	    };
-	    Steam.prototype.disablePhysics = function () {
-	        this.sprite.body.gravity.y = 0;
-	        this.sprite.body.velocity.y = 0;
-	        this.sprite.body.velocity.x = 0;
 	    };
 	    Steam.prototype.teleportThroughVent = function (from, to) {
 	        var _this = this;
