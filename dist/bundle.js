@@ -402,11 +402,14 @@
 	        this.currentState.update(cursors);
 	        // Clamp velocity so we don't clip through platforms.
 	        this.sprite.body.velocity.y =
-	            Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
+	            Phaser.Math.clamp(this.sprite.body.velocity.y, -1500, 1500);
 	        // TODO: Determine bottom of the level from the map.
-	        if (this.sprite.y > 670) {
-	            this.sprite.y = 650;
-	            this.sprite.body.velocity.x = 0;
+	        var floor = this.map.tileMap.heightInPixels - this.map.tileMap.tileHeight;
+	        var feet = this.sprite.body.y + this.sprite.body.height;
+	        if (feet > (floor)) {
+	            console.log("Broke through floor ", feet, floor);
+	            this.sprite.body.y = floor - this.sprite.height;
+	            this.sprite.body.velocity.y = 0;
 	        }
 	    };
 	    return Player;
@@ -433,7 +436,7 @@
 	    Ice.prototype.init = function () {
 	        this.sprite.animations.play('ice');
 	        this.sprite.body.bounce.y = 0;
-	        this.sprite.body.gravity.y = 3000;
+	        this.sprite.body.gravity.y = 4000;
 	    };
 	    Ice.prototype.update = function (cursors) {
 	        // Ice collides with platforms but cannot be controlled.
@@ -449,7 +452,7 @@
 	    Water.prototype.init = function () {
 	        this.sprite.animations.play('water');
 	        this.sprite.body.bounce.y = 0.2;
-	        this.sprite.body.gravity.y = 2000;
+	        this.sprite.body.gravity.y = 1500;
 	    };
 	    Water.prototype.update = function (cursors) {
 	        // Make the sprite collide with the ground layer
