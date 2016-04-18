@@ -47,7 +47,7 @@
   \*****************/
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(/*! /Users/heathkit/src/ludum35/src/index.ts */1);
+	module.exports = __webpack_require__(/*! /home/heathkit/src/ludum35/src/index.ts */1);
 
 
 /***/ },
@@ -110,22 +110,10 @@
 	    __extends(MainMenu, _super);
 	    function MainMenu() {
 	        _super.call(this);
-	        this.selected = 0;
-	        this.style = {
-	            font: "bold 32px Arial",
-	            fill: "#fff",
-	            boundsAlignH: "center",
-	            boundsAlignV: "middle"
-	        };
-	        this.levels = [
-	            'Saturday',
-	            'Sunday',
-	            'TBA',
-	            'TBA',
-	            'TBA',
-	        ];
 	    }
-	    MainMenu.prototype.preload = function () { };
+	    MainMenu.prototype.preload = function () {
+	        this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64, 64);
+	    };
 	    MainMenu.prototype.create = function () {
 	        var _this = this;
 	        this.game.stage.backgroundColor = '#337799';
@@ -138,42 +126,53 @@
 	        var title = this.game.add.text(0, 0, "Dr. Phase!", titleStyle);
 	        title.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
 	        title.setTextBounds(0, 0, 800, 100);
+	        var water = this.game.add.sprite(50, 100, 'player');
+	        water.frame = 1;
+	        this.drawText(120, 80, "Press '1' to become water. As water, you can move around with the arrow keys, but you'll fall through grates and drains.");
+	        var steam = this.game.add.sprite(50, 200, 'player');
+	        steam.frame = 5;
+	        this.drawText(120, 180, "Press '2' to become steam. Steam rises and is blown by fans.");
+	        var ice = this.game.add.sprite(50, 300, 'player');
+	        ice.frame = 0;
+	        this.drawText(120, 280, "Press '3' to become ice. Ice falls fast and is also blown by fans.");
+	        var rect = new Phaser.Rectangle(300, 450, 200, 100);
 	        this.bar = this.game.add.graphics();
-	        for (var i = 0; i < this.levels.length; i++) {
-	            this.drawText(this.levels[i], i);
-	        }
-	        ;
-	        // Enable cursor keys so we can create some controls
-	        this.cursors = this.game.input.keyboard.createCursorKeys();
+	        var style = {
+	            font: "bold 46px Arial",
+	            fill: "#0d3",
+	            boundsAlignH: "center",
+	            boundsAlignV: "middle"
+	        };
+	        var text = this.game.add.text(0, 0, "START", style);
+	        text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
+	        text.setTextBounds(rect.x, rect.y, rect.width, rect.height);
+	        this.startRect = rect;
 	        this.game.input.onDown.add(function (event) {
-	            var item = Math.floor((_this.game.input.y - 100) / 100);
-	            if (item == 0) {
-	                _this.game.state.start('Saturday', true, false);
-	            }
-	            else if (item == 1) {
+	            if (rect.contains(_this.game.input.x, _this.game.input.y)) {
 	                _this.game.state.start('Sunday', true, false);
-	            }
-	            else {
-	                console.log("Invalid level selected!");
 	            }
 	        });
 	    };
 	    MainMenu.prototype.update = function () {
-	        this.selected = Math.floor((this.game.input.y - 100) / 100);
-	        if (this.selected < 0) {
-	            this.selected = 0;
-	        }
+	        var rect = this.startRect;
 	        this.bar.clear();
-	        this.bar.beginFill(0x000000, 0.2);
-	        this.bar.drawRect(0, (100 * this.selected) + 100, 800, 100);
+	        if (rect.contains(this.game.input.x, this.game.input.y)) {
+	            this.bar.beginFill(0x000000, 0.2);
+	            this.bar.drawRect(rect.x, rect.y, rect.width, rect.height);
+	        }
 	    };
-	    MainMenu.prototype.drawText = function (name, pos) {
-	        //  The Text is positioned at 0, 100
-	        var text = this.game.add.text(0, 0, name, this.style);
+	    MainMenu.prototype.drawText = function (x, y, message) {
+	        var style = {
+	            font: "bold 22px Arial",
+	            fill: "#fff",
+	            wordWrap: true,
+	            wordWrapWidth: 650,
+	            boundsAlignH: "left",
+	            boundsAlignV: "middle"
+	        };
+	        var text = this.game.add.text(0, 0, message, style);
 	        text.setShadow(3, 3, 'rgba(0,0,0,0.5)', 2);
-	        //  We'll set the bounds to be from x0, y100 and be 800px wide by 100px high
-	        var line = pos * 100 + 100;
-	        text.setTextBounds(0, line, 800, 100);
+	        text.setTextBounds(x, y, 700, 100);
 	    };
 	    return MainMenu;
 	}(Phaser.State));
@@ -226,6 +225,8 @@
 	        this.cursors = this.game.input.keyboard.createCursorKeys();
 	        var debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.M);
 	        debugKey.onDown.add(function () { _this.debug = !_this.debug; });
+	        var quitKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+	        quitKey.onDown.add(function () { _this.game.state.start('MainMenu'); });
 	    };
 	    BaseLevel.prototype.update = function () {
 	        // TODO Instead of passing this directly, allow touch or keyboard input.
@@ -552,9 +553,7 @@
 	        this.teleporting = false;
 	        this.sprite.animations.play('water');
 	        this.startPhysics();
-	        this.map.drainCallback = function (to) {
-	            _this.teleportThroughDrain(to);
-	        };
+	        this.map.drainCallback = function (to) { _this.teleportThroughDrain(to); };
 	    };
 	    Water.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.2;
