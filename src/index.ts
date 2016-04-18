@@ -2,7 +2,8 @@
 /// <reference path="../public/lib/phaser.d.ts"/>
 import * as Phaser from 'phaser';
 import {MainMenu} from './main-menu.ts';
-import {BaseLevel} from './base-level.ts';
+import {SaturdayLevel} from './base-level.ts';
+import {SundayLevel} from './base-level.ts';
 
 class DrPhase extends Phaser.Game {
   constructor(width, height, game, name) { super(width, height, game, name); }
@@ -10,5 +11,6 @@ class DrPhase extends Phaser.Game {
 
 var game = new DrPhase(800, 600, Phaser.AUTO, 'game');
 game.state.add('MainMenu', MainMenu, true);
-game.state.add('Level', BaseLevel, true);
+game.state.add('Saturday', SaturdayLevel, true);
+game.state.add('Sunday', SundayLevel, true);
 game.state.start('MainMenu');

@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 import {Player} from './player.ts';
 
-export class BaseLevel extends Phaser.State {
+class BaseLevel extends Phaser.State {
   player: Player;
   map: Map;
   cursors: Phaser.CursorKeys;
@@ -18,11 +18,10 @@ export class BaseLevel extends Phaser.State {
     this.game.load.image('steam', 'assets/images/steam.png');
     this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64,
                                64);
-    this.game.load.image('tiles', 'assets/tiles/platforms.png');
+    this.game.load.image('platforms', 'assets/tiles/platforms.png');
     this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
+    this.game.load.image('grates', 'assets/tiles/grates.png');
     this.game.load.image('fans', 'assets/tiles/fans.png');
-    this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
-                           Phaser.Tilemap.TILED_JSON);
   }
 
   init(mapName: string) { this.mapName = mapName; }
@@ -35,7 +34,6 @@ export class BaseLevel extends Phaser.State {
     // See http://www.html5gamedevs.com/topic/15266-phaser-camera-jittering/
     this.game.renderer.renderSession.roundPixels = true;
 
-    this.map = new Map(this.game, this.mapName);
     this.player = new Player(this.game, this.map);
 
     // Make the camera follow the sprite
@@ -64,19 +62,42 @@ export class BaseLevel extends Phaser.State {
   }
 }
 
-// TODO: Represent levels as sub classes of baselevel so we have an easy
-// way to hand code level-specific logic.
-class SaturdayLevel extends BaseLevel {
+// Individual levels are subclasses of BaseLevel so we can override stuff
+// as needed.
+export class SaturdayLevel extends BaseLevel {
   preload() {
     super.preload();
     this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
                            Phaser.Tilemap.TILED_JSON);
   }
+
+  create() {
+    // TODO: Unfuck this bullshit.
+    LEFT_VENT_IDX = 4;
+    RIGHT_VENT_IDX = 6;
+    this.map = new Map(this.game, 'saturday_2');
+    super.create();
+  }
 }
 
-// Indecies of special tiles in the tilemap.
-const LEFT_VENT_IDX = 4;
-const RIGHT_VENT_IDX = 6;
+export class SundayLevel extends BaseLevel {
+  preload() {
+    super.preload()
+    this.game.load.tilemap('sunday', 'assets/sunday.json', null,
+                           Phaser.Tilemap.TILED_JSON);
+  }
+
+  create() {
+      LEFT_VENT_IDX = 18;
+      RIGHT_VENT_IDX = 20;
+      this.map = new Map(this.game, 'sunday');
+      super.create();
+  }
+}
+
+  // Indecies of special tiles in the tilemap.
+var LEFT_VENT_IDX: number;
+var RIGHT_VENT_IDX: number;
 
 export class Map {
   tileMap: Phaser.Tilemap;
@@ -103,7 +124,9 @@ export class Map {
     // second
     // is the key to the asset in Phaser
     this.tileMap = game.add.tilemap(mapName);
-    this.tileMap.addTilesetImage('platforms_ducts', 'tiles');
+    this.tileMap.addTilesetImage('platforms', 'platforms');
+    this.tileMap.addTilesetImage('grates', 'grates');
+    this.tileMap.addTilesetImage('pipes', 'pipes');
 
     // Add both the background and ground layers. We won't be doing anything
     // with the
@@ -114,7 +137,7 @@ export class Map {
     // TODO: load the fans and make them spin.
     /*
       //  And now we convert all of the Tiled objects with an ID of 34 into sprites within the coins group
-     map.createFromObjects('Object Layer 1', 34, 'coin', 0, true, false, coins);
+     map.createFromObjects('fans', 34, 'coin', 0, true, false, coins);
 
      //  Add animations to all of the coin sprites
      coins.callAll('animations.add', 'animations', 'spin', [0, 1, 2, 3, 4, 5], 10, true);

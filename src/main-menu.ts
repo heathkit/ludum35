@@ -18,8 +18,8 @@ export class MainMenu extends Phaser.State {
       boundsAlignV : "middle"
     };
     this.levels = [
-      'Friday Night',
-      'TBA',
+      'Saturday',
+      'Sunday',
       'TBA',
       'TBA',
       'TBA',
@@ -52,7 +52,9 @@ export class MainMenu extends Phaser.State {
     this.game.input.onDown.add((event) => {
       let item = Math.floor((this.game.input.y - 100) / 100);
       if (item == 0) {
-        this.game.state.start('Level', true, false, [ 'saturday_2' ]);
+        this.game.state.start('Saturday', true, false);
+      } else if (item == 1) {
+        this.game.state.start('Sunday', true, false);
       } else {
         console.log("Invalid level selected!");
       }
