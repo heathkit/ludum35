@@ -140,7 +140,7 @@ export class Map {
         this.ventCallback(from, to);
         this.lastVentEventSent = this.game.time.totalElapsedSeconds();
       }
-      return true
+      return true;
     }
     return false;
   }
