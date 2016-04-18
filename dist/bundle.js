@@ -68,6 +68,7 @@
 	var Phaser = __webpack_require__(/*! phaser */ 2);
 	var main_menu_ts_1 = __webpack_require__(/*! ./main-menu.ts */ 3);
 	var base_level_ts_1 = __webpack_require__(/*! ./base-level.ts */ 4);
+	var base_level_ts_2 = __webpack_require__(/*! ./base-level.ts */ 4);
 	var DrPhase = (function (_super) {
 	    __extends(DrPhase, _super);
 	    function DrPhase(width, height, game, name) {
@@ -77,7 +78,8 @@
 	}(Phaser.Game));
 	var game = new DrPhase(800, 600, Phaser.AUTO, 'game');
 	game.state.add('MainMenu', main_menu_ts_1.MainMenu, true);
-	game.state.add('Level', base_level_ts_1.BaseLevel, true);
+	game.state.add('Saturday', base_level_ts_1.SaturdayLevel, true);
+	game.state.add('Sunday', base_level_ts_2.SundayLevel, true);
 	game.state.start('MainMenu');
 
 
@@ -116,8 +118,8 @@
 	            boundsAlignV: "middle"
 	        };
 	        this.levels = [
-	            'Friday Night',
-	            'TBA',
+	            'Saturday',
+	            'Sunday',
 	            'TBA',
 	            'TBA',
 	            'TBA',
@@ -146,7 +148,10 @@
 	        this.game.input.onDown.add(function (event) {
 	            var item = Math.floor((_this.game.input.y - 100) / 100);
 	            if (item == 0) {
-	                _this.game.state.start('Level', true, false, ['saturday_2']);
+	                _this.game.state.start('Saturday', true, false);
+	            }
+	            else if (item == 1) {
+	                _this.game.state.start('Sunday', true, false);
 	            }
 	            else {
 	                console.log("Invalid level selected!");
@@ -197,12 +202,14 @@
 	        this.debug = false;
 	    }
 	    BaseLevel.prototype.preload = function () {
+	        // Character assets.
 	        this.game.load.image('steam', 'assets/images/steam.png');
 	        this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64, 64);
-	        this.game.load.image('tiles', 'assets/tiles/platforms.png');
+	        // Level assets.
+	        this.game.load.image('platforms', 'assets/tiles/platforms.png');
 	        this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
-	        this.game.load.image('fans', 'assets/tiles/fans.png');
-	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
+	        this.game.load.image('grates', 'assets/tiles/grates.png');
+	        this.game.load.spritesheet('fans', 'assets/tiles/fans.png', 64, 64);
 	    };
 	    BaseLevel.prototype.init = function (mapName) { this.mapName = mapName; };
 	    BaseLevel.prototype.create = function () {
@@ -212,7 +219,6 @@
 	        // Possible fix for jittery sprites.
 	        // See http://www.html5gamedevs.com/topic/15266-phaser-camera-jittering/
 	        this.game.renderer.renderSession.roundPixels = true;
-	        this.map = new Map(this.game, this.mapName);
 	        this.player = new player_ts_1.Player(this.game, this.map);
 	        // Make the camera follow the sprite
 	        this.game.camera.follow(this.player.sprite);
@@ -236,9 +242,8 @@
 	    };
 	    return BaseLevel;
 	}(Phaser.State));
-	exports.BaseLevel = BaseLevel;
-	// TODO: Represent levels as sub classes of baselevel so we have an easy
-	// way to hand code level-specific logic.
+	// Individual levels are subclasses of BaseLevel so we can override stuff
+	// as needed.
 	var SaturdayLevel = (function (_super) {
 	    __extends(SaturdayLevel, _super);
 	    function SaturdayLevel() {
@@ -248,11 +253,46 @@
 	        _super.prototype.preload.call(this);
 	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
 	    };
+	    SaturdayLevel.prototype.create = function () {
+	        // TODO: Unfuck this bullshit.
+	        LEFT_VENT_IDX = 4;
+	        RIGHT_VENT_IDX = 6;
+	        DUCT_IDX = 5;
+	        this.map = new Map(this.game, 'saturday_2');
+	        _super.prototype.create.call(this);
+	    };
 	    return SaturdayLevel;
 	}(BaseLevel));
+	exports.SaturdayLevel = SaturdayLevel;
+	var SundayLevel = (function (_super) {
+	    __extends(SundayLevel, _super);
+	    function SundayLevel() {
+	        _super.apply(this, arguments);
+	    }
+	    SundayLevel.prototype.preload = function () {
+	        _super.prototype.preload.call(this);
+	        this.game.load.tilemap('sunday', 'assets/sunday.json', null, Phaser.Tilemap.TILED_JSON);
+	    };
+	    SundayLevel.prototype.create = function () {
+	        LEFT_VENT_IDX = 18;
+	        DUCT_IDX = 19;
+	        RIGHT_VENT_IDX = 20;
+	        GRATE_IDX = 12;
+	        LEFT_FAN_IDX = 7;
+	        RIGHT_FAN_IDX = 9;
+	        this.map = new Map(this.game, 'sunday');
+	        _super.prototype.create.call(this);
+	    };
+	    return SundayLevel;
+	}(BaseLevel));
+	exports.SundayLevel = SundayLevel;
 	// Indecies of special tiles in the tilemap.
-	var LEFT_VENT_IDX = 4;
-	var RIGHT_VENT_IDX = 6;
+	var LEFT_VENT_IDX;
+	var RIGHT_VENT_IDX;
+	var GRATE_IDX;
+	var LEFT_FAN_IDX;
+	var RIGHT_FAN_IDX;
+	var DUCT_IDX;
 	var Map = (function () {
 	    function Map(game, mapName) {
 	        this.overVent = false;
@@ -264,17 +304,29 @@
 	        // second
 	        // is the key to the asset in Phaser
 	        this.tileMap = game.add.tilemap(mapName);
-	        this.tileMap.addTilesetImage('platforms_ducts', 'tiles');
+	        this.tileMap.addTilesetImage('platforms', 'platforms');
+	        this.tileMap.addTilesetImage('grates', 'grates');
+	        this.tileMap.addTilesetImage('pipes', 'pipes');
 	        // Add both the background and ground layers. We won't be doing anything
 	        // with the
 	        // GroundLayer though
 	        this.ductLayer = this.tileMap.createLayer('ducts');
 	        this.platformLayer = this.tileMap.createLayer('platforms');
+	        // Load in the fans and start them spinning.
+	        var left_fans = this.game.add.group();
+	        this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 0, true, false, left_fans);
+	        var right_fans = this.game.add.group();
+	        this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 2, true, false, right_fans);
+	        //  Add animations to all of the coin sprites
+	        left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1], 10, true);
+	        left_fans.callAll('animations.play', 'animations', 'left_spin');
+	        right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3], 10, true);
+	        right_fans.callAll('animations.play', 'animations', 'right_spin');
 	        // Before you can use the collide function you need to set what tiles can
 	        // collide
 	        this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 	        // Exclude pipe tiles from collsion on the duct layer.
-	        this.tileMap.setCollisionByExclusion([5], true, 'ducts');
+	        this.tileMap.setCollisionByExclusion([DUCT_IDX], true, 'ducts');
 	        // Change the world size to match the size of this layer
 	        this.platformLayer.resizeWorld();
 	        this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX], this.onVentHit, this, 'ducts');
@@ -318,8 +370,13 @@
 	            }
 	        }
 	    };
-	    Map.prototype.collidePlatforms = function (sprite) {
-	        this.game.physics.arcade.collide(sprite, this.platformLayer);
+	    Map.prototype.collidePlatforms = function (sprite, skipGrates) {
+	        this.game.physics.arcade.collide(sprite, this.platformLayer, null, function (sprite, tile) {
+	            if (skipGrates && tile.index == GRATE_IDX) {
+	                return false;
+	            }
+	            return true;
+	        });
 	    };
 	    Map.prototype.collideDucts = function (sprite) {
 	        this.game.physics.arcade.collide(sprite, this.ductLayer);
@@ -372,7 +429,8 @@
 	        this.sprite.body.collideWorldBounds = true;
 	        // The different characters are different frames in the same spritesheet.
 	        this.sprite.animations.add('steam', [5, 6, 7, 6], 7, true);
-	        this.sprite.animations.add('water', [1, 2, 3], 1, true);
+	        this.sprite.animations.add('water', [1], 0, false);
+	        this.sprite.animations.add('water_drain', [1, 2, 3], 3, false);
 	        this.sprite.animations.add('ice', [0], 10, true);
 	        this.waterState = new Water(this.sprite, this.map, this.game);
 	        this.steamState = new Steam(this.sprite, this.map, this.game);
@@ -402,7 +460,7 @@
 	        this.currentState.update(cursors);
 	        // Clamp velocity so we don't clip through platforms.
 	        this.sprite.body.velocity.y =
-	            Phaser.Math.clamp(this.sprite.body.velocity.y, -1500, 1500);
+	            Phaser.Math.clamp(this.sprite.body.velocity.y, -1000, 1000);
 	        // TODO: Determine bottom of the level from the map.
 	        var floor = this.map.tileMap.heightInPixels - this.map.tileMap.tileHeight;
 	        var feet = this.sprite.body.y + this.sprite.body.height;
@@ -440,7 +498,7 @@
 	    };
 	    Ice.prototype.update = function (cursors) {
 	        // Ice collides with platforms but cannot be controlled.
-	        this.map.collidePlatforms(this.sprite);
+	        this.map.collidePlatforms(this.sprite, false);
 	    };
 	    return Ice;
 	}(CharacterState));
@@ -456,7 +514,7 @@
 	    };
 	    Water.prototype.update = function (cursors) {
 	        // Make the sprite collide with the ground layer
-	        this.map.collidePlatforms(this.sprite);
+	        this.map.collidePlatforms(this.sprite, true);
 	        // Water can slide around.
 	        if (cursors.left.isDown) {
 	            this.sprite.body.velocity.x = -500;
@@ -483,7 +541,7 @@
 	        this.sprite.animations.play("steam");
 	        this.startPhysics();
 	        this.map.ventCallback =
-	            function (from, to) { _this.teleportThroughPipe(from, to); };
+	            function (from, to) { _this.teleportThroughVent(from, to); };
 	    };
 	    Steam.prototype.makeSteamTrail = function () {
 	        this.emitter = this.game.add.emitter(0, 0, 20);
@@ -499,14 +557,14 @@
 	    };
 	    Steam.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.4;
-	        this.sprite.body.gravity.y = -2000;
+	        this.sprite.body.gravity.y = -1000;
 	    };
 	    Steam.prototype.disablePhysics = function () {
 	        this.sprite.body.gravity.y = 0;
 	        this.sprite.body.velocity.y = 0;
 	        this.sprite.body.velocity.x = 0;
 	    };
-	    Steam.prototype.teleportThroughPipe = function (from, to) {
+	    Steam.prototype.teleportThroughVent = function (from, to) {
 	        var _this = this;
 	        this.teleporting = true;
 	        this.disablePhysics();
@@ -550,6 +608,7 @@
 	        // Ignore collisions during teleport.
 	        if (!this.teleporting) {
 	            this.map.collideDucts(this.sprite);
+	            this.map.collidePlatforms(this.sprite, true);
 	        }
 	    };
 	    return Steam;
