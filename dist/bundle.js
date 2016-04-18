@@ -197,6 +197,7 @@
 	        this.debug = false;
 	    }
 	    BaseLevel.prototype.preload = function () {
+	        this.game.load.image('steam', 'assets/images/steam.png');
 	        this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
 	        this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
 	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
@@ -448,8 +449,9 @@
 	}(CharacterState));
 	var Steam = (function (_super) {
 	    __extends(Steam, _super);
-	    function Steam() {
-	        _super.apply(this, arguments);
+	    function Steam(sprite, map, game) {
+	        _super.call(this, sprite, map, game);
+	        this.makeSteamTrail();
 	    }
 	    Steam.prototype.init = function () {
 	        var _this = this;
@@ -459,6 +461,18 @@
 	        this.startPhysics();
 	        this.map.ventCallback =
 	            function (from, to) { _this.teleportThroughPipe(from, to); };
+	    };
+	    Steam.prototype.makeSteamTrail = function () {
+	        this.emitter = this.game.add.emitter(0, 0, 20);
+	        this.emitter.makeParticles('steam');
+	        this.emitter.setXSpeed(0, 0);
+	        this.emitter.setYSpeed(0, 0);
+	        this.emitter.setRotation(0, 0);
+	        this.emitter.setAlpha(.5, 0, 3000);
+	        this.emitter.setScale(0.2, 1, 0.2, 1, 6000, Phaser.Easing.Quintic.Out);
+	        this.emitter.gravity = 25;
+	        this.emitter.start(false, 3000, 50);
+	        this.emitter.on = false;
 	    };
 	    Steam.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.4;
@@ -475,16 +489,23 @@
 	        this.disablePhysics();
 	        console.log("Teleport from ", from, to);
 	        var shrink = this.game.add.tween(this.sprite.scale)
-	            .to({ x: 0.1, y: 0.1 }, 500, Phaser.Easing.Cubic.Out);
+	            .to({ x: 0.1, y: 0.1 }, 500, Phaser.Easing.Cubic.In);
 	        var expand = this.game.add.tween(this.sprite.scale)
 	            .to({ x: 1, y: 1 }, 500, Phaser.Easing.Cubic.Out);
-	        var enterVent = this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.Out);
-	        var moveToExit = this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.Out);
+	        var enterVent = this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.In);
+	        var moveToExit = this.game.add.tween(this.sprite)
+	            .to(to, 1000, Phaser.Easing.Cubic.InOut);
 	        enterVent.chain(moveToExit);
 	        enterVent.onStart.add(function () { shrink.start(); });
 	        // Hide the sprite during teleport
-	        moveToExit.onStart.add(function () { _this.sprite.visible = false; });
-	        moveToExit.onComplete.add(function () { _this.sprite.visible = true; });
+	        moveToExit.onStart.add(function () {
+	            _this.emitter.on = true;
+	            _this.sprite.visible = false;
+	        });
+	        moveToExit.onComplete.add(function () {
+	            _this.emitter.on = false;
+	            _this.sprite.visible = true;
+	        });
 	        moveToExit.chain(expand);
 	        expand.onComplete.add(function () {
 	            console.log("Teleport done");
@@ -502,6 +523,8 @@
 	    };
 	    Steam.prototype.update = function (cursors) {
 	        // Steam just rises uncontrollably.
+	        this.emitter.emitX = this.sprite.x;
+	        this.emitter.emitY = this.sprite.y;
 	        // Ignore collisions during teleport.
 	        if (!this.teleporting) {
 	            this.map.collideDucts(this.sprite);
