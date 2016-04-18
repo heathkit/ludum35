@@ -91,7 +91,7 @@ export class SundayLevel extends BaseLevel {
   preload() {
     super.preload();
     this.game.load.tilemap('sunday', 'assets/sunday.json', null,
-                                           Phaser.Tilemap.TILED_JSON);
+                           Phaser.Tilemap.TILED_JSON);
   }
 
   create() {
@@ -102,7 +102,7 @@ export class SundayLevel extends BaseLevel {
     LEFT_FAN_IDX = 7;
     RIGHT_FAN_IDX = 9;
     DRAIN_IDX = 14;
-    DRAIN_EXIT = new Phaser.Point(30,8);
+    DRAIN_EXIT = new Phaser.Point(30, 8);
     this.map = new Map(this.game, 'sunday');
     super.create();
   }
@@ -111,15 +111,15 @@ export class SundayLevel extends BaseLevel {
 // TODO Use MapConfig instead of a bunch of fucking globals.
 // Right now, this isn't used. Someday....
 interface MapConfig {
-    left_vent: number;
-    right_vent: number;
-    grate: number;
-    drain: number;
-    spout: number;
-    left_fan: number;
-    right_fan: number;
-    duct_idx: number;
-    drain_idx: number;
+  left_vent: number;
+  right_vent: number;
+  grate: number;
+  drain: number;
+  spout: number;
+  left_fan: number;
+  right_fan: number;
+  duct_idx: number;
+  drain_idx: number;
 }
 
 // Indecies of special tiles in the tilemap.
@@ -170,18 +170,20 @@ export class Map {
 
     // Load in the fans and start them spinning.
     this.left_fans = this.game.add.group();
-    this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 2, true, false, this.left_fans);
+    this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 2, true, false,
+                                   this.left_fans);
 
     this.right_fans = this.game.add.group();
-    this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 0, true, false, this.right_fans);
+    this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 0, true,
+                                   false, this.right_fans);
 
     // Set up animations for the fans.
-    this.left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1],
-      10, true);
+    this.left_fans.callAll('animations.add', 'animations', 'left_spin',
+                           [ 0, 1 ], 10, true);
     this.left_fans.callAll('animations.play', 'animations', 'left_spin');
 
-    this.right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3],
-      10, true);
+    this.right_fans.callAll('animations.add', 'animations', 'right_spin',
+                            [ 2, 3 ], 10, true);
     this.right_fans.callAll('animations.play', 'animations', 'right_spin');
 
     // Before you can use the collide function you need to set what tiles can
@@ -189,7 +191,7 @@ export class Map {
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
     // Exclude non-vent tiles from collsion on the duct layer.
-    this.tileMap.setCollisionByExclusion([DUCT_IDX], true, 'ducts');
+    this.tileMap.setCollisionByExclusion([ DUCT_IDX ], true, 'ducts');
 
     // Change the world size to match the size of this layer
     this.platformLayer.resizeWorld();
@@ -197,8 +199,8 @@ export class Map {
     this.tileMap.setTileIndexCallback([ LEFT_VENT_IDX, RIGHT_VENT_IDX ],
                                       this.onVentHit, this, 'ducts');
 
-    this.tileMap.setTileIndexCallback([ DRAIN_IDX ],
-                                      this.onDrainHit, this, 'platforms');
+    this.tileMap.setTileIndexCallback([ DRAIN_IDX ], this.onDrainHit, this,
+                                      'platforms');
   }
 
   // Callback triggered when a sprite collides with a vent.
@@ -250,20 +252,21 @@ export class Map {
   // Callback triggered when a sprite collides with a drain.
   onDrainHit(sprite: Phaser.Sprite, tile: Phaser.Tile) {
     if ((Math.abs(sprite.x - tile.worldX) < 10) && this.drainCallback) {
-      let exitTile = this.tileMap.getTile(DRAIN_EXIT.x, DRAIN_EXIT.y, 'platforms', true);
+      let exitTile =
+          this.tileMap.getTile(DRAIN_EXIT.x, DRAIN_EXIT.y, 'platforms', true);
       this.drainCallback(new Phaser.Point(exitTile.worldX, exitTile.worldY));
     }
     return true;
   }
 
   collidePlatforms(sprite: Phaser.Sprite, skipGrates: boolean) {
-    this.game.physics.arcade.collide(sprite, this.platformLayer,
-      null, (sprite, tile) => {
-        if (skipGrates && tile.index == GRATE_IDX) {
-          return false;
-        }
-        return true;
-      });
+    this.game.physics.arcade.collide(
+        sprite, this.platformLayer, null, (sprite, tile) => {
+          if (skipGrates && tile.index == GRATE_IDX) {
+            return false;
+          }
+          return true;
+        });
   }
 
   collideDucts(sprite: Phaser.Sprite) {
@@ -273,18 +276,19 @@ export class Map {
   collideFans(sprite: Phaser.Sprite) {
     // Fans will blow a sprite away from them if they're inline.
     // Fans are only effective within 5 tiles.
-    let range = 5*this.tileMap.tileWidth;
+    let range = 5 * this.tileMap.tileWidth;
 
-    let fanCollisionLeft = new Phaser.Rectangle(sprite.x - range, sprite.y,
-      range, sprite.height);
-    let fanCollisionRight = new Phaser.Rectangle(sprite.x + sprite.width,
-      sprite.y, range, sprite.height);
+    let fanCollisionLeft =
+        new Phaser.Rectangle(sprite.x - range, sprite.y, range, sprite.height);
+    let fanCollisionRight = new Phaser.Rectangle(
+        sprite.x + sprite.width, sprite.y, range, sprite.height);
 
     // look to the right for fans blowing to the left.
     this.left_fans.forEach((fan: Phaser.Sprite) => {
       let fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
       if (fanCollisionLeft.intersects(fanBox, 0.1)) {
-        let dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+        let dist =
+            Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
         sprite.body.velocity.x += 1000 / dist;
       }
     }, null);
@@ -293,11 +297,11 @@ export class Map {
     this.right_fans.forEach((fan: Phaser.Sprite) => {
       let fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
       if (fanCollisionRight.intersects(fanBox, 0.1)) {
-        let dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+        let dist =
+            Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
         sprite.body.velocity.x -= 1000 / dist;
       }
     }, null);
-
   }
 
   // Example of how to work with the tilemap to change collision behavior.

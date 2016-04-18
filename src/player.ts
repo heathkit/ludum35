@@ -100,7 +100,6 @@ class CharacterState {
     this.sprite.body.velocity.y = 0;
     this.sprite.body.velocity.x = 0;
   }
-
 }
 
 class Ice extends CharacterState {
@@ -125,9 +124,7 @@ class Water extends CharacterState {
     this.sprite.animations.play('water');
     this.startPhysics();
 
-    this.map.drainCallback = (to) => {
-      this.teleportThroughDrain(to);
-    }
+    this.map.drainCallback = (to) => { this.teleportThroughDrain(to); }
   }
 
   private startPhysics() {

@@ -5,14 +5,11 @@ export class MainMenu extends Phaser.State {
   bar: Phaser.Graphics;
   startRect: Phaser.Rectangle;
 
-  constructor() {
-    super();
-  }
+  constructor() { super(); }
 
   preload() {
     this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64,
-                                                              64);
-
+                               64);
   }
 
   create() {
@@ -30,21 +27,26 @@ export class MainMenu extends Phaser.State {
 
     let water = this.game.add.sprite(50, 100, 'player')
     water.frame = 1;
-    this.drawText(120, 80, "Press '1' to become water. As water, you can move around with the arrow keys, but you'll fall through grates and drains.");
+    this.drawText(
+        120, 80,
+        "Press '1' to become water. As water, you can move around with the arrow keys, but you'll fall through grates and drains.");
 
     let steam = this.game.add.sprite(50, 200, 'player')
     steam.frame = 5;
-    this.drawText(120, 180, "Press '2' to become steam. Steam rises and is blown by fans.");
-
+    this.drawText(
+        120, 180,
+        "Press '2' to become steam. Steam rises and is blown by fans.");
 
     let ice = this.game.add.sprite(50, 300, 'player')
     ice.frame = 0;
-    this.drawText(120, 280, "Press '3' to become ice. Ice falls fast and is also blown by fans.");
+    this.drawText(
+        120, 280,
+        "Press '3' to become ice. Ice falls fast and is also blown by fans.");
 
     let rect = new Phaser.Rectangle(300, 450, 200, 100);
     this.bar = this.game.add.graphics();
 
-    let style =  {
+    let style = {
       font : "bold 46px Arial",
       fill : "#0d3",
       boundsAlignH : "center",
@@ -72,11 +74,11 @@ export class MainMenu extends Phaser.State {
   }
 
   private drawText(x: number, y: number, message: string) {
-    let style =  {
+    let style = {
       font : "bold 22px Arial",
       fill : "#fff",
-      wordWrap: true,
-      wordWrapWidth: 650,
+      wordWrap : true,
+      wordWrapWidth : 650,
       boundsAlignH : "left",
       boundsAlignV : "middle"
     };
