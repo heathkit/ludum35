@@ -47,6 +47,9 @@ class BaseLevel extends Phaser.State {
 
     let debugKey = this.game.input.keyboard.addKey(Phaser.Keyboard.M);
     debugKey.onDown.add(() => {this.debug = !this.debug});
+
+    let quitKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ESC);
+    quitKey.onDown.add(() => {this.game.state.start('MainMenu')});
   }
 
   update() {
