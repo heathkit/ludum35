@@ -198,14 +198,17 @@
 	    }
 	    BaseLevel.prototype.preload = function () {
 	        this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
-	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
 	        this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
+	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
 	    };
 	    BaseLevel.prototype.init = function (mapName) { this.mapName = mapName; };
 	    BaseLevel.prototype.create = function () {
 	        var _this = this;
 	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
 	        this.game.stage.backgroundColor = "#a9f0ff";
+	        // Possible fix for jittery sprites.
+	        // See http://www.html5gamedevs.com/topic/15266-phaser-camera-jittering/
+	        this.game.renderer.renderSession.roundPixels = true;
 	        this.map = new Map(this.game, this.mapName);
 	        this.player = new player_ts_1.Player(this.game, this.map);
 	        // Make the camera follow the sprite
@@ -231,8 +234,28 @@
 	    return BaseLevel;
 	}(Phaser.State));
 	exports.BaseLevel = BaseLevel;
+	// TODO: Represent levels as sub classes of baselevel so we have an easy
+	// way to hand code level-specific logic.
+	var SaturdayLevel = (function (_super) {
+	    __extends(SaturdayLevel, _super);
+	    function SaturdayLevel() {
+	        _super.apply(this, arguments);
+	    }
+	    SaturdayLevel.prototype.preload = function () {
+	        _super.prototype.preload.call(this);
+	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
+	    };
+	    return SaturdayLevel;
+	}(BaseLevel));
+	// Indecies of special tiles in the tilemap.
+	var LEFT_VENT_IDX = 4;
+	var RIGHT_VENT_IDX = 6;
 	var Map = (function () {
 	    function Map(game, mapName) {
+	        this.overVent = false;
+	        this.game = game;
+	        // Cheat so we can send vent events at the start of the game.
+	        this.lastVentEventSent = -10;
 	        // Add the tilemap and tileset image. The first parameter in addTilesetImage
 	        // is the name you gave the tilesheet when importing it into Tiled, the
 	        // second
@@ -247,11 +270,60 @@
 	        // Before you can use the collide function you need to set what tiles can
 	        // collide
 	        this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
+	        // Exclude pipe tiles from collsion on the duct layer.
+	        this.tileMap
+	            .setCollisionByExclusion([5], true, 'ducts');
 	        // Change the world size to match the size of this layer
 	        this.platformLayer.resizeWorld();
-	        this.makePlatformsOneWay();
+	        this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX], this.onVentHit, this, 'ducts');
 	    }
+	    // Callback triggered when a sprite collides with a vent.
+	    Map.prototype.onVentHit = function (sprite, tile) {
+	        // Only register the collision if we have a callback.
+	        if (this.ventCallback) {
+	            // Debounce this event.
+	            var elapsedSinceLastEvent = this.game.time.totalElapsedSeconds() - this.lastVentEventSent;
+	            // This delay is set to give us time to exit the vent after getting
+	            // sucked through it. A better way would be to have the ventCallback
+	            // return whether we should respect collisions.
+	            if (elapsedSinceLastEvent >= 4) {
+	                // Send a callback with the enter and exit points.
+	                var height = tile.height / 2 - 20;
+	                var width = tile.width / 2;
+	                var from = new Phaser.Point(tile.worldX + width, tile.worldY + height);
+	                var otherVent = this.getOtherVent(tile);
+	                var to = new Phaser.Point(otherVent.worldX + width, otherVent.worldY + height);
+	                this.ventCallback(from, to);
+	                this.lastVentEventSent = this.game.time.totalElapsedSeconds();
+	            }
+	            return true;
+	        }
+	        return false;
+	    };
+	    // Given a vent tile, find the other vent tile in this map.
+	    Map.prototype.getOtherVent = function (tile) {
+	        var exitType = LEFT_VENT_IDX;
+	        if (tile.index == LEFT_VENT_IDX) {
+	            exitType = RIGHT_VENT_IDX;
+	        }
+	        var d = this.tileMap.layers[this.ductLayer.index].data;
+	        console.log(d);
+	        for (var row = 0; row < d.length; row++) {
+	            for (var col = 0; col < d[row].length; col++) {
+	                if (d[row][col].index == exitType) {
+	                    return d[row][col];
+	                }
+	            }
+	        }
+	    };
+	    Map.prototype.collidePlatforms = function (sprite) {
+	        this.game.physics.arcade.collide(sprite, this.platformLayer);
+	    };
+	    Map.prototype.collideDucts = function (sprite) {
+	        this.game.physics.arcade.collide(sprite, this.ductLayer);
+	    };
 	    // Example of how to work with the tilemap to change collision behavior.
+	    // No longer used, but it shows how to search through the tile map.
 	    Map.prototype.makePlatformsOneWay = function () {
 	        var d = this.tileMap.layers[this.platformLayer.index].data;
 	        console.log(d);
@@ -290,17 +362,17 @@
 	        this.game = game;
 	        this.map = map;
 	        // Add the sprite to the game and enable arcade physics on it
-	        this.sprite = game.add.sprite(10, 0, 'player');
+	        this.sprite = game.add.sprite(10, 500, 'player');
 	        this.game.physics.arcade.enable(this.sprite);
-	        this.sprite.body.setSize(48, 56, 8, 0);
+	        this.sprite.body.setSize(48, 48, 8, 6);
 	        this.sprite.debug = true;
 	        // Set some physics on the sprite
 	        this.sprite.body.collideWorldBounds = true;
 	        // The different characters are different frames in the same spritesheet.
 	        this.sprite.animations.add('steam', [0, 1, 2, 1], 7, true);
 	        this.sprite.animations.add('water', [3], 10, true);
-	        this.waterState = new Water(this.sprite, this.map);
-	        this.steamState = new Steam(this.sprite, this.map);
+	        this.waterState = new Water(this.sprite, this.map, this.game);
+	        this.steamState = new Steam(this.sprite, this.map, this.game);
 	        var dudeKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
 	        var waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
 	        var steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
@@ -311,16 +383,21 @@
 	        this.changeState(this.waterState);
 	    }
 	    Player.prototype.changeState = function (newState) {
+	        if (this.currentState) {
+	            if (!this.currentState.cleanup()) {
+	                console.log("Not allowed to change state!");
+	                return;
+	            }
+	        }
 	        newState.init();
 	        this.currentState = newState;
 	        console.log("Becoming state ", newState);
 	    };
 	    Player.prototype.update = function (cursors) {
-	        // Make the sprite collide with the ground layer
-	        this.game.physics.arcade.collide(this.sprite, this.map.platformLayer);
 	        this.currentState.update(cursors);
 	        // Clamp velocity so we don't clip through platforms.
-	        this.sprite.body.velocity.y = Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
+	        this.sprite.body.velocity.y =
+	            Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
 	        // TODO: Determine bottom of the level from the map.
 	        if (this.sprite.y > 670) {
 	            this.sprite.y = 650;
@@ -331,12 +408,16 @@
 	}());
 	exports.Player = Player;
 	var CharacterState = (function () {
-	    function CharacterState(sprite, map) {
+	    function CharacterState(sprite, map, game) {
 	        this.sprite = sprite;
 	        this.map = map;
+	        this.game = game;
 	    }
 	    CharacterState.prototype.init = function () { console.log("Init unimplemented"); };
 	    CharacterState.prototype.update = function (cursors) { console.log("Update unimplemented"); };
+	    // Clean up the state before switching. Will
+	    // return false if the state does not allow switching.
+	    CharacterState.prototype.cleanup = function () { return true; };
 	    return CharacterState;
 	}());
 	var Water = (function (_super) {
@@ -350,6 +431,8 @@
 	        this.sprite.body.gravity.y = 2000;
 	    };
 	    Water.prototype.update = function (cursors) {
+	        // Make the sprite collide with the ground layer
+	        this.map.collidePlatforms(this.sprite);
 	        // Water can slide around.
 	        if (cursors.left.isDown) {
 	            this.sprite.body.velocity.x = -500;
@@ -369,14 +452,60 @@
 	        _super.apply(this, arguments);
 	    }
 	    Steam.prototype.init = function () {
-	        this.sprite.animations
-	            .play("steam");
+	        var _this = this;
+	        this.lastExitVent = 0;
+	        this.teleporting = false;
+	        this.sprite.animations.play("steam");
+	        this.startPhysics();
+	        this.map.ventCallback =
+	            function (from, to) { _this.teleportThroughPipe(from, to); };
+	    };
+	    Steam.prototype.startPhysics = function () {
 	        this.sprite.body.bounce.y = 0.4;
 	        this.sprite.body.gravity.y = -2000;
 	    };
+	    Steam.prototype.disablePhysics = function () {
+	        this.sprite.body.gravity.y = 0;
+	        this.sprite.body.velocity.y = 0;
+	        this.sprite.body.velocity.x = 0;
+	    };
+	    Steam.prototype.teleportThroughPipe = function (from, to) {
+	        var _this = this;
+	        this.teleporting = true;
+	        this.disablePhysics();
+	        console.log("Teleport from ", from, to);
+	        var shrink = this.game.add.tween(this.sprite.scale)
+	            .to({ x: 0.1, y: 0.1 }, 500, Phaser.Easing.Cubic.Out);
+	        var expand = this.game.add.tween(this.sprite.scale)
+	            .to({ x: 1, y: 1 }, 500, Phaser.Easing.Cubic.Out);
+	        var enterVent = this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.Out);
+	        var moveToExit = this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.Out);
+	        enterVent.chain(moveToExit);
+	        enterVent.onStart.add(function () { shrink.start(); });
+	        // Hide the sprite during teleport
+	        moveToExit.onStart.add(function () { _this.sprite.visible = false; });
+	        moveToExit.onComplete.add(function () { _this.sprite.visible = true; });
+	        moveToExit.chain(expand);
+	        expand.onComplete.add(function () {
+	            console.log("Teleport done");
+	            _this.teleporting = false;
+	            _this.startPhysics();
+	        });
+	        enterVent.start();
+	    };
+	    Steam.prototype.cleanup = function () {
+	        if (this.teleporting) {
+	            return false;
+	        }
+	        this.map.ventCallback = undefined;
+	        return true;
+	    };
 	    Steam.prototype.update = function (cursors) {
-	        // Steam just rises.
-	        // If we pass by a vent, get sucked into the ducts.
+	        // Steam just rises uncontrollably.
+	        // Ignore collisions during teleport.
+	        if (!this.teleporting) {
+	            this.map.collideDucts(this.sprite);
+	        }
 	    };
 	    return Steam;
 	}(CharacterState));
