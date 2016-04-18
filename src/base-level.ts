@@ -17,9 +17,9 @@ export class BaseLevel extends Phaser.State {
   preload() {
     this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64,
                                64);
+    this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
     this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
                            Phaser.Tilemap.TILED_JSON);
-    this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
   }
 
   init(mapName: string) { this.mapName = mapName; }
@@ -61,13 +61,28 @@ export class BaseLevel extends Phaser.State {
   }
 }
 
+class SaturdayLevel extends BaseLevel {
+    preload() {
+      super();
+      this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
+                           Phaser.Tilemap.TILED_JSON);
+    }
+
+}
+
+// Indecies of special tiles in the tilemap.
+const LEFT_VENT_IDX = 4;
+const RIGHT_VENT_IDX = 6;
+
 export class Map {
   tileMap: Phaser.Tilemap;
 
-  platformLayer: Phaser.TilemapLayer;
-  ductLayer: Phaser.TilemapLayer;
+  private platformLayer: Phaser.TilemapLayer;
+  private ductLayer: Phaser.TilemapLayer;
+  private game: Phaser.Game;
 
   constructor(game: Phaser.Game, mapName: string) {
+    this.game = game;
     // Add the tilemap and tileset image. The first parameter in addTilesetImage
     // is the name you gave the tilesheet when importing it into Tiled, the
     // second
@@ -85,13 +100,31 @@ export class Map {
     // collide
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
+    // Exclude pipe tiles from collsion on the duct layer.
+    this.tileMap.setCollisionByExclusion([5], true, 'ducts')
+
     // Change the world size to match the size of this layer
     this.platformLayer.resizeWorld();
 
-    this.makePlatformsOneWay();
+    let ventCallback = (sprite, tile) => {
+        console.log("Over vent." , sprite, tile);
+        return true;
+    }
+
+    this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX],
+      ventCallback, this, 'ducts');
+  }
+
+  collidePlatforms(sprite: Phaser.Sprite) {
+    this.game.physics.arcade.collide(sprite, this.platformLayer);
+  }
+
+  collideDucts(sprite: Phaser.Sprite) {
+    this.game.physics.arcade.collide(sprite, this.ductLayer);
   }
 
   // Example of how to work with the tilemap to change collision behavior.
+  // No longer used, but it shows how to search through the tile map.
   makePlatformsOneWay() {
     let d = this.tileMap.layers[this.platformLayer.index].data
     console.log(d);

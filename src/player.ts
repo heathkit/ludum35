@@ -49,13 +49,12 @@ export class Player {
   }
 
   update(cursors: Phaser.CursorKeys) {
-    // Make the sprite collide with the ground layer
-    this.game.physics.arcade.collide(this.sprite, this.map.platformLayer);
 
     this.currentState.update(cursors);
 
     // Clamp velocity so we don't clip through platforms.
-    this.sprite.body.velocity.y = Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
+    this.sprite.body.velocity.y =
+        Phaser.Math.clamp(this.sprite.body.velocity.y, -750, 750);
 
     // TODO: Determine bottom of the level from the map.
     if (this.sprite.y > 670) {
@@ -88,6 +87,9 @@ class Water extends CharacterState {
   }
 
   update(cursors: Phaser.CursorKeys) {
+    // Make the sprite collide with the ground layer
+    this.map.collidePlatforms(this.sprite);
+
     // Water can slide around.
     if (cursors.left.isDown) {
       this.sprite.body.velocity.x = -500;
@@ -96,21 +98,23 @@ class Water extends CharacterState {
     } else {
       this.sprite.body.velocity.x = 0;
     }
-
   }
 }
 
 class Steam extends CharacterState {
   init() {
-    this.sprite.animations
-        .play("steam")
+    this.sprite.animations.play("steam");
 
-            this.sprite.body.bounce.y = 0.4;
+    this.sprite.body.bounce.y = 0.4;
     this.sprite.body.gravity.y = -2000;
   }
+  
   update(cursors: Phaser.CursorKeys) {
-    // Steam just rises.
+    // Steam just rises uncontrollably.
 
     // If we pass by a vent, get sucked into the ducts.
+    this.map.collideDucts(this.sprite);
+
+    // Maybe do a tween to shrink the cloud?
   }
 }
