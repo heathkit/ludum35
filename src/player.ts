@@ -67,13 +67,13 @@ export class Player {
     this.sprite.body.velocity.y =
         Phaser.Math.clamp(this.sprite.body.velocity.y, -1000, 1000);
 
-    // TODO: Determine bottom of the level from the map.
-    let floor = this.map.tileMap.heightInPixels - this.map.tileMap.tileHeight;
+    // Player dies when they fall off the level.
+    let floor = this.map.tileMap.heightInPixels - 10;
     let feet = this.sprite.body.y + this.sprite.body.height;
-    if (feet > (floor)) {
-      console.log("Broke through floor ", feet, floor);
-      this.sprite.body.y = floor - this.sprite.height;
-      this.sprite.body.velocity.y = 0;
+    if (feet > floor) {
+      console.log("You died");
+      window.alert("You died");
+      this.game.state.start(this.game.state.current);
     }
   }
 }
