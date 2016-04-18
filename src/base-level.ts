@@ -247,17 +247,13 @@ export class Map {
 
   collideFans(sprite: Phaser.Sprite) {
     // Fans will blow a sprite away from them if they're inline.
-    // Fans are only effective within 3 tiles.
-
+    // Fans are only effective within 5 tiles.
     let range = 5*this.tileMap.tileWidth;
 
     let fanCollisionLeft = new Phaser.Rectangle(sprite.x - range, sprite.y,
       range, sprite.height);
     let fanCollisionRight = new Phaser.Rectangle(sprite.x + sprite.width,
       sprite.y, range, sprite.height);
-
-    //this.game.debug.renderRectangle(fanCollisionLeft, "#00ff00");
-    //this.game.debug.renderRectangle(fanCollisionRight, "#00ff00");
 
     // look to the right for fans blowing to the left.
     this.left_fans.forEach((fan: Phaser.Sprite) => {
