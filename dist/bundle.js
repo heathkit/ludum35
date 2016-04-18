@@ -307,25 +307,23 @@
 	        this.tileMap.addTilesetImage('platforms', 'platforms');
 	        this.tileMap.addTilesetImage('grates', 'grates');
 	        this.tileMap.addTilesetImage('pipes', 'pipes');
-	        // Add both the background and ground layers. We won't be doing anything
-	        // with the
-	        // GroundLayer though
+	        // Add the duct and platform layers.
 	        this.ductLayer = this.tileMap.createLayer('ducts');
 	        this.platformLayer = this.tileMap.createLayer('platforms');
 	        // Load in the fans and start them spinning.
-	        var left_fans = this.game.add.group();
-	        this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 0, true, false, left_fans);
-	        var right_fans = this.game.add.group();
-	        this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 2, true, false, right_fans);
-	        //  Add animations to all of the coin sprites
-	        left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1], 10, true);
-	        left_fans.callAll('animations.play', 'animations', 'left_spin');
-	        right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3], 10, true);
-	        right_fans.callAll('animations.play', 'animations', 'right_spin');
+	        this.left_fans = this.game.add.group();
+	        this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 2, true, false, this.left_fans);
+	        this.right_fans = this.game.add.group();
+	        this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 0, true, false, this.right_fans);
+	        // Set up animations for the fans.
+	        this.left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1], 10, true);
+	        this.left_fans.callAll('animations.play', 'animations', 'left_spin');
+	        this.right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3], 10, true);
+	        this.right_fans.callAll('animations.play', 'animations', 'right_spin');
 	        // Before you can use the collide function you need to set what tiles can
-	        // collide
+	        // collide.
 	        this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
-	        // Exclude pipe tiles from collsion on the duct layer.
+	        // Exclude non-vent tiles from collsion on the duct layer.
 	        this.tileMap.setCollisionByExclusion([DUCT_IDX], true, 'ducts');
 	        // Change the world size to match the size of this layer
 	        this.platformLayer.resizeWorld();
@@ -380,6 +378,31 @@
 	    };
 	    Map.prototype.collideDucts = function (sprite) {
 	        this.game.physics.arcade.collide(sprite, this.ductLayer);
+	    };
+	    Map.prototype.collideFans = function (sprite) {
+	        // Fans will blow a sprite away from them if they're inline.
+	        // Fans are only effective within 3 tiles.
+	        var range = 5 * this.tileMap.tileWidth;
+	        var fanCollisionLeft = new Phaser.Rectangle(sprite.x - range, sprite.y, range, sprite.height);
+	        var fanCollisionRight = new Phaser.Rectangle(sprite.x + sprite.width, sprite.y, range, sprite.height);
+	        //this.game.debug.renderRectangle(fanCollisionLeft, "#00ff00");
+	        //this.game.debug.renderRectangle(fanCollisionRight, "#00ff00");
+	        // look to the right for fans blowing to the left.
+	        this.left_fans.forEach(function (fan) {
+	            var fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
+	            if (fanCollisionLeft.intersects(fanBox, 0.1)) {
+	                var dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+	                sprite.body.velocity.x += 1000 / dist;
+	            }
+	        }, null);
+	        // and to the left for fans blowing to the right.
+	        this.right_fans.forEach(function (fan) {
+	            var fanBox = new Phaser.Rectangle(fan.x, fan.y, fan.width, fan.height);
+	            if (fanCollisionRight.intersects(fanBox, 0.1)) {
+	                var dist = Phaser.Point.distance(fan.worldPosition, sprite.worldPosition);
+	                sprite.body.velocity.x -= 1000 / dist;
+	            }
+	        }, null);
 	    };
 	    // Example of how to work with the tilemap to change collision behavior.
 	    // No longer used, but it shows how to search through the tile map.
@@ -499,6 +522,7 @@
 	    Ice.prototype.update = function (cursors) {
 	        // Ice collides with platforms but cannot be controlled.
 	        this.map.collidePlatforms(this.sprite, false);
+	        this.map.collideFans(this.sprite);
 	    };
 	    return Ice;
 	}(CharacterState));
@@ -609,6 +633,7 @@
 	        if (!this.teleporting) {
 	            this.map.collideDucts(this.sprite);
 	            this.map.collidePlatforms(this.sprite, true);
+	            this.map.collideFans(this.sprite);
 	        }
 	    };
 	    return Steam;
