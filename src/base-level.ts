@@ -91,7 +91,9 @@ export class Map {
   constructor(game: Phaser.Game, mapName: string) {
     this.overVent = false;
     this.game = game;
-    this.lastVentEventSent = 0;
+
+    // Cheat so we can send vent events at the start of the game.
+    this.lastVentEventSent = -10;
 
     // Add the tilemap and tileset image. The first parameter in addTilesetImage
     // is the name you gave the tilesheet when importing it into Tiled, the
@@ -129,9 +131,12 @@ export class Map {
       let elapsedSinceLastEvent =
           this.game.time.totalElapsedSeconds() - this.lastVentEventSent
 
-      if (elapsedSinceLastEvent >= 2) {
+      // This delay is set to give us time to exit the vent after getting
+      // sucked through it. A better way would be to have the ventCallback
+      // return whether we should respect collisions.
+      if (elapsedSinceLastEvent >= 4) {
         // Send a callback with the enter and exit points.
-        let height = tile.height / 2;
+        let height = tile.height / 2 - 20;
         let width = tile.width / 2;
         let from = new Phaser.Point(tile.worldX + width, tile.worldY + height);
         let otherVent = this.getOtherVent(tile);

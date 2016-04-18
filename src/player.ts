@@ -87,9 +87,7 @@ class CharacterState {
 
   // Clean up the state before switching. Will
   // return false if the state does not allow switching.
-  cleanup(): boolean {
-      return true;
-  }
+  cleanup(): boolean { return true; }
 }
 
 class Water extends CharacterState {
@@ -127,7 +125,7 @@ class Steam extends CharacterState {
     this.startPhysics();
 
     this.map.ventCallback =
-        (from, to) => { this.teleportThroughPipe(from, to)};
+        (from, to) => { this.teleportThroughPipe(from, to) };
   }
 
   private startPhysics() {
@@ -136,35 +134,37 @@ class Steam extends CharacterState {
   }
 
   private disablePhysics() {
-    this.sprite.body.gravity.y=0;
-    this.sprite.body.velocity.y=0;
-    this.sprite.body.velocity.x=0;
+    this.sprite.body.gravity.y = 0;
+    this.sprite.body.velocity.y = 0;
+    this.sprite.body.velocity.x = 0;
   }
 
   private teleportThroughPipe(from, to) {
     this.teleporting = true;
     this.disablePhysics();
-    console.log("Teleport from ",from, to);
+    console.log("Teleport from ", from, to);
 
-    let shrink = this.game.add.tween(this.sprite.scale).to(
-      {x:0.1,y:0.1}, 500, Phaser.Easing.Cubic.Out);
-    let expand = this.game.add.tween(this.sprite.scale).to(
-      {x:1,y:1}, 500, Phaser.Easing.Cubic.Out);
+    let shrink = this.game.add.tween(this.sprite.scale)
+                     .to({x : 0.1, y : 0.1}, 500, Phaser.Easing.Cubic.Out);
+    let expand = this.game.add.tween(this.sprite.scale)
+                     .to({x : 1, y : 1}, 500, Phaser.Easing.Cubic.Out);
 
-    let enterVent = this.game.add.tween(this.sprite).to(
-      from, 1000, Phaser.Easing.Cubic.Out);
-    let moveToExit = this.game.add.tween(this.sprite).to(
-      to, 1000, Phaser.Easing.Cubic.Out);
+    let enterVent =
+        this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.Out);
+    let moveToExit =
+        this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.Out);
 
     enterVent.chain(moveToExit);
     enterVent.onStart.add(() => {shrink.start()});
+    // Hide the sprite during teleport
+    moveToExit.onStart.add(() => {this.sprite.visible = false});
+    moveToExit.onComplete.add(() => {this.sprite.visible = true});
     moveToExit.chain(expand);
 
     expand.onComplete.add(() => {
       console.log("Teleport done");
       this.teleporting = false;
       this.startPhysics();
-      this.lastExitVent = this.game.time.elapsedMS;
     })
     enterVent.start();
   }
