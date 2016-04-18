@@ -198,8 +198,10 @@
 	    }
 	    BaseLevel.prototype.preload = function () {
 	        this.game.load.image('steam', 'assets/images/steam.png');
-	        this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64, 64);
-	        this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
+	        this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64, 64);
+	        this.game.load.image('tiles', 'assets/tiles/platforms.png');
+	        this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
+	        this.game.load.image('fans', 'assets/tiles/fans.png');
 	        this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null, Phaser.Tilemap.TILED_JSON);
 	    };
 	    BaseLevel.prototype.init = function (mapName) { this.mapName = mapName; };
@@ -272,8 +274,7 @@
 	        // collide
 	        this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 	        // Exclude pipe tiles from collsion on the duct layer.
-	        this.tileMap
-	            .setCollisionByExclusion([5], true, 'ducts');
+	        this.tileMap.setCollisionByExclusion([5], true, 'ducts');
 	        // Change the world size to match the size of this layer
 	        this.platformLayer.resizeWorld();
 	        this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX], this.onVentHit, this, 'ducts');
@@ -370,16 +371,19 @@
 	        // Set some physics on the sprite
 	        this.sprite.body.collideWorldBounds = true;
 	        // The different characters are different frames in the same spritesheet.
-	        this.sprite.animations.add('steam', [0, 1, 2, 1], 7, true);
-	        this.sprite.animations.add('water', [3], 10, true);
+	        this.sprite.animations.add('steam', [5, 6, 7, 6], 7, true);
+	        this.sprite.animations.add('water', [1, 2, 3], 1, true);
+	        this.sprite.animations.add('ice', [0], 10, true);
 	        this.waterState = new Water(this.sprite, this.map, this.game);
 	        this.steamState = new Steam(this.sprite, this.map, this.game);
-	        var dudeKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-	        var waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-	        var steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+	        this.iceState = new Ice(this.sprite, this.map, this.game);
+	        var waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+	        var steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+	        var iceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
 	        // dudeKey.onDown.add(() => {this.changeState()});
 	        waterKey.onDown.add(function () { _this.changeState(_this.waterState); });
 	        steamKey.onDown.add(function () { _this.changeState(_this.steamState); });
+	        iceKey.onDown.add(function () { _this.changeState(_this.iceState); });
 	        // Start as water.
 	        this.changeState(this.waterState);
 	    }
@@ -421,6 +425,22 @@
 	    CharacterState.prototype.cleanup = function () { return true; };
 	    return CharacterState;
 	}());
+	var Ice = (function (_super) {
+	    __extends(Ice, _super);
+	    function Ice() {
+	        _super.apply(this, arguments);
+	    }
+	    Ice.prototype.init = function () {
+	        this.sprite.animations.play('ice');
+	        this.sprite.body.bounce.y = 0;
+	        this.sprite.body.gravity.y = 3000;
+	    };
+	    Ice.prototype.update = function (cursors) {
+	        // Ice collides with platforms but cannot be controlled.
+	        this.map.collidePlatforms(this.sprite);
+	    };
+	    return Ice;
+	}(CharacterState));
 	var Water = (function (_super) {
 	    __extends(Water, _super);
 	    function Water() {
@@ -493,8 +513,7 @@
 	        var expand = this.game.add.tween(this.sprite.scale)
 	            .to({ x: 1, y: 1 }, 500, Phaser.Easing.Cubic.Out);
 	        var enterVent = this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.In);
-	        var moveToExit = this.game.add.tween(this.sprite)
-	            .to(to, 1000, Phaser.Easing.Cubic.InOut);
+	        var moveToExit = this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.In);
 	        enterVent.chain(moveToExit);
 	        enterVent.onStart.add(function () { shrink.start(); });
 	        // Hide the sprite during teleport
