@@ -30,8 +30,9 @@ recharge. (Possibly add an item to give you energy)
 - ?will smash through certain floor tiles when falling
 
 ## TODO
-- Drain collision for water
 - steam and water don't collide with grates
+- Death on falling through pits
+- Drain collision for water
 - Ice and steam are pushed by fans
 - Some kind of hud?
 

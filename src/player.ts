@@ -72,7 +72,7 @@ export class Player {
     let feet = this.sprite.body.y + this.sprite.body.height;
     if (feet > (floor)) {
       console.log("Broke through floor ", feet, floor);
-      this.sprite.body.y = floor-this.sprite.height;
+      this.sprite.body.y = floor - this.sprite.height;
       this.sprite.body.velocity.y = 0;
     }
   }
@@ -99,11 +99,11 @@ class CharacterState {
 }
 
 class Ice extends CharacterState {
-    init() {
-      this.sprite.animations.play('ice');
-      this.sprite.body.bounce.y = 0;
-      this.sprite.body.gravity.y = 4000;
-    }
+  init() {
+    this.sprite.animations.play('ice');
+    this.sprite.body.bounce.y = 0;
+    this.sprite.body.gravity.y = 4000;
+  }
 
   update(cursors: Phaser.CursorKeys) {
     // Ice collides with platforms but cannot be controlled.

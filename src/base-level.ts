@@ -15,9 +15,12 @@ class BaseLevel extends Phaser.State {
   }
 
   preload() {
+    // Character assets.
     this.game.load.image('steam', 'assets/images/steam.png');
     this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64,
                                64);
+
+    // Level assets.
     this.game.load.image('platforms', 'assets/tiles/platforms.png');
     this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
     this.game.load.image('grates', 'assets/tiles/grates.png');
@@ -82,20 +85,19 @@ export class SaturdayLevel extends BaseLevel {
 
 export class SundayLevel extends BaseLevel {
   preload() {
-    super.preload()
-    this.game.load.tilemap('sunday', 'assets/sunday.json', null,
-                           Phaser.Tilemap.TILED_JSON);
+    super.preload() this.game.load.tilemap('sunday', 'assets/sunday.json', null,
+                                           Phaser.Tilemap.TILED_JSON);
   }
 
   create() {
-      LEFT_VENT_IDX = 18;
-      RIGHT_VENT_IDX = 20;
-      this.map = new Map(this.game, 'sunday');
-      super.create();
+    LEFT_VENT_IDX = 18;
+    RIGHT_VENT_IDX = 20;
+    this.map = new Map(this.game, 'sunday');
+    super.create();
   }
 }
 
-  // Indecies of special tiles in the tilemap.
+// Indecies of special tiles in the tilemap.
 var LEFT_VENT_IDX: number;
 var RIGHT_VENT_IDX: number;
 
@@ -136,11 +138,13 @@ export class Map {
 
     // TODO: load the fans and make them spin.
     /*
-      //  And now we convert all of the Tiled objects with an ID of 34 into sprites within the coins group
+      //  And now we convert all of the Tiled objects with an ID of 34 into
+     sprites within the coins group
      map.createFromObjects('fans', 34, 'coin', 0, true, false, coins);
 
      //  Add animations to all of the coin sprites
-     coins.callAll('animations.add', 'animations', 'spin', [0, 1, 2, 3, 4, 5], 10, true);
+     coins.callAll('animations.add', 'animations', 'spin', [0, 1, 2, 3, 4, 5],
+     10, true);
      coins.callAll('animations.play', 'animations', 'spin');
     */
 
