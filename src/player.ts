@@ -27,7 +27,7 @@ export class Player {
     // The different characters are different frames in the same spritesheet.
     this.sprite.animations.add('steam', [ 5, 6, 7, 6 ], 7, true);
     this.sprite.animations.add('water', [ 1 ], 0, false);
-    this.sprite.animations.add('water_drain', [ 1, 2, 3 ], 3, false);
+    this.sprite.animations.add('water_drain', [ 1, 2, 3 ], 8, false);
     this.sprite.animations.add('ice', [ 0 ], 10, true);
 
     this.waterState = new Water(this.sprite, this.map, this.game);
@@ -38,7 +38,6 @@ export class Player {
     let steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
     let iceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
 
-    // dudeKey.onDown.add(() => {this.changeState()});
     waterKey.onDown.add(() => {this.changeState(this.waterState)});
     steamKey.onDown.add(() => {this.changeState(this.steamState)});
     iceKey.onDown.add(() => {this.changeState(this.iceState)});
@@ -56,7 +55,6 @@ export class Player {
     }
     newState.init();
     this.currentState = newState;
-    console.log("Becoming state ", newState);
   }
 
   update(cursors: Phaser.CursorKeys) {
@@ -96,6 +94,13 @@ class CharacterState {
   // Clean up the state before switching. Will
   // return false if the state does not allow switching.
   cleanup(): boolean { return true; }
+
+  disablePhysics() {
+    this.sprite.body.gravity.y = 0;
+    this.sprite.body.velocity.y = 0;
+    this.sprite.body.velocity.x = 0;
+  }
+
 }
 
 class Ice extends CharacterState {
@@ -113,25 +118,69 @@ class Ice extends CharacterState {
 }
 
 class Water extends CharacterState {
-  init() {
-    this.sprite.animations.play('water');
+  teleporting: boolean;
 
+  init() {
+    this.teleporting = false;
+    this.sprite.animations.play('water');
+    this.startPhysics();
+
+    this.map.drainCallback = (to) => {
+      this.teleportThroughDrain(to);
+    }
+  }
+
+  private startPhysics() {
     this.sprite.body.bounce.y = 0.2;
     this.sprite.body.gravity.y = 1500;
+  }
+
+  private teleportThroughDrain(to: Phaser.Point) {
+    if (this.teleporting) {
+      return;
+    }
+    console.log("Flowing through drain");
+    this.teleporting = true;
+    this.disablePhysics();
+
+    let anim = this.sprite.animations.getAnimation('water_drain');
+    let moveToExit =
+        this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.In);
+    moveToExit.onComplete.add(() => {
+      this.teleporting = false;
+      this.startPhysics();
+      this.sprite.animations.play("water");
+      this.sprite.visible = true;
+    });
+    anim.onComplete.add(() => {
+      this.sprite.visible = false;
+      moveToExit.start();
+    });
+    anim.play();
   }
 
   update(cursors: Phaser.CursorKeys) {
     // Make the sprite collide with the ground layer
     this.map.collidePlatforms(this.sprite, true);
 
-    // Water can slide around.
-    if (cursors.left.isDown) {
-      this.sprite.body.velocity.x = -500;
-    } else if (cursors.right.isDown) {
-      this.sprite.body.velocity.x = 500;
-    } else {
-      this.sprite.body.velocity.x = 0;
+    if (!this.teleporting) {
+      // Water can slide around.
+      if (cursors.left.isDown) {
+        this.sprite.body.velocity.x = -500;
+      } else if (cursors.right.isDown) {
+        this.sprite.body.velocity.x = 500;
+      } else {
+        this.sprite.body.velocity.x = 0;
+      }
     }
+  }
+
+  cleanup() {
+    if (this.teleporting) {
+      return false;
+    }
+    this.map.drainCallback = undefined;
+    return true;
   }
 }
 
@@ -174,12 +223,6 @@ class Steam extends CharacterState {
   private startPhysics() {
     this.sprite.body.bounce.y = 0.4;
     this.sprite.body.gravity.y = -1000;
-  }
-
-  private disablePhysics() {
-    this.sprite.body.gravity.y = 0;
-    this.sprite.body.velocity.y = 0;
-    this.sprite.body.velocity.x = 0;
   }
 
   private teleportThroughVent(from, to) {

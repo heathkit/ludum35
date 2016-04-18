@@ -98,11 +98,15 @@ export class SundayLevel extends BaseLevel {
     GRATE_IDX = 12;
     LEFT_FAN_IDX = 7;
     RIGHT_FAN_IDX = 9;
+    DRAIN_IDX = 14;
+    DRAIN_EXIT = new Phaser.Point(30,8);
     this.map = new Map(this.game, 'sunday');
     super.create();
   }
 }
 
+// TODO Use MapConfig instead of a bunch of fucking globals.
+// Right now, this isn't used. Someday....
 interface MapConfig {
     left_vent: number;
     right_vent: number;
@@ -112,6 +116,7 @@ interface MapConfig {
     left_fan: number;
     right_fan: number;
     duct_idx: number;
+    drain_idx: number;
 }
 
 // Indecies of special tiles in the tilemap.
@@ -121,6 +126,8 @@ var GRATE_IDX: number;
 var LEFT_FAN_IDX: number;
 var RIGHT_FAN_IDX: number;
 var DUCT_IDX: number;
+var DRAIN_IDX: number;
+var DRAIN_EXIT: Phaser.Point;
 
 export class Map {
   tileMap: Phaser.Tilemap;
@@ -130,6 +137,7 @@ export class Map {
   private game: Phaser.Game;
 
   ventCallback: (from: Phaser.Point, to: Phaser.Point) => void;
+  drainCallback: (to: Phaser.Point) => void;
   private lastVentEventSent: number;
   left_fans: Phaser.Group;
   right_fans: Phaser.Group;
@@ -185,6 +193,9 @@ export class Map {
 
     this.tileMap.setTileIndexCallback([ LEFT_VENT_IDX, RIGHT_VENT_IDX ],
                                       this.onVentHit, this, 'ducts');
+
+    this.tileMap.setTileIndexCallback([ DRAIN_IDX ],
+                                      this.onDrainHit, this, 'platforms');
   }
 
   // Callback triggered when a sprite collides with a vent.
@@ -216,6 +227,8 @@ export class Map {
 
   // Given a vent tile, find the other vent tile in this map.
   getOtherVent(tile: Phaser.Tile) {
+    // TODO Really, this is wrong. Instead, we should follow the duct until we
+    // hit the exit, moving the player sprite along the way.
     let exitType = LEFT_VENT_IDX;
     if (tile.index == LEFT_VENT_IDX) {
       exitType = RIGHT_VENT_IDX;
@@ -229,6 +242,15 @@ export class Map {
         }
       }
     }
+  }
+
+  // Callback triggered when a sprite collides with a drain.
+  onDrainHit(sprite: Phaser.Sprite, tile: Phaser.Tile) {
+    if ((Math.abs(sprite.x - tile.worldX) < 10) && this.drainCallback) {
+      let exitTile = this.tileMap.getTile(DRAIN_EXIT.x, DRAIN_EXIT.y, 'platforms', true);
+      this.drainCallback(new Phaser.Point(exitTile.worldX, exitTile.worldY));
+    }
+    return true;
   }
 
   collidePlatforms(sprite: Phaser.Sprite, skipGrates: boolean) {

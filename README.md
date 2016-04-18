@@ -30,7 +30,6 @@ recharge. (Possibly add an item to give you energy)
 - ?will smash through certain floor tiles when falling
 
 ## TODO
-- Drain collision for water
 - Better death
 - Instructions on front page
 - follow pipes and drains instead of jumping to exit
