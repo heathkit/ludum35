@@ -461,13 +461,13 @@
 	        // Clamp velocity so we don't clip through platforms.
 	        this.sprite.body.velocity.y =
 	            Phaser.Math.clamp(this.sprite.body.velocity.y, -1000, 1000);
-	        // TODO: Determine bottom of the level from the map.
-	        var floor = this.map.tileMap.heightInPixels - this.map.tileMap.tileHeight;
+	        // Player dies when they fall off the level.
+	        var floor = this.map.tileMap.heightInPixels - 10;
 	        var feet = this.sprite.body.y + this.sprite.body.height;
-	        if (feet > (floor)) {
-	            console.log("Broke through floor ", feet, floor);
-	            this.sprite.body.y = floor - this.sprite.height;
-	            this.sprite.body.velocity.y = 0;
+	        if (feet > floor) {
+	            console.log("You died");
+	            window.alert("You died");
+	            this.game.state.start(this.game.state.current);
 	        }
 	    };
 	    return Player;
