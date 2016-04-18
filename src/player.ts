@@ -9,6 +9,7 @@ export class Player {
   currentState: CharacterState;
   waterState: Water;
   steamState: Steam;
+  iceState: Ice;
 
   constructor(game: Phaser.Game, map: Map) {
     this.game = game;
@@ -24,19 +25,22 @@ export class Player {
     this.sprite.body.collideWorldBounds = true;
 
     // The different characters are different frames in the same spritesheet.
-    this.sprite.animations.add('steam', [ 0, 1, 2, 1 ], 7, true);
-    this.sprite.animations.add('water', [ 3 ], 10, true);
+    this.sprite.animations.add('steam', [ 5, 6, 7, 6 ], 7, true);
+    this.sprite.animations.add('water', [ 1, 2, 3 ], 1, true);
+    this.sprite.animations.add('ice', [ 0 ], 10, true);
 
     this.waterState = new Water(this.sprite, this.map, this.game);
     this.steamState = new Steam(this.sprite, this.map, this.game);
+    this.iceState = new Ice(this.sprite, this.map, this.game);
 
-    let dudeKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
-    let waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
-    let steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+    let waterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+    let steamKey = this.game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+    let iceKey = this.game.input.keyboard.addKey(Phaser.Keyboard.THREE);
 
     // dudeKey.onDown.add(() => {this.changeState()});
     waterKey.onDown.add(() => {this.changeState(this.waterState)});
     steamKey.onDown.add(() => {this.changeState(this.steamState)});
+    iceKey.onDown.add(() => {this.changeState(this.iceState)});
 
     // Start as water.
     this.changeState(this.waterState);
@@ -88,6 +92,19 @@ class CharacterState {
   // Clean up the state before switching. Will
   // return false if the state does not allow switching.
   cleanup(): boolean { return true; }
+}
+
+class Ice extends CharacterState {
+    init() {
+      this.sprite.animations.play('ice');
+      this.sprite.body.bounce.y = 0;
+      this.sprite.body.gravity.y = 3000;
+    }
+
+  update(cursors: Phaser.CursorKeys) {
+    // Ice collides with platforms but cannot be controlled.
+    this.map.collidePlatforms(this.sprite);
+  }
 }
 
 class Water extends CharacterState {

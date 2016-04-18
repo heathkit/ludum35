@@ -16,9 +16,11 @@ export class BaseLevel extends Phaser.State {
 
   preload() {
     this.game.load.image('steam', 'assets/images/steam.png');
-    this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64,
+    this.game.load.spritesheet('player', 'assets/tiles/all_characters.png', 64,
                                64);
-    this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');
+    this.game.load.image('tiles', 'assets/tiles/platforms.png');
+    this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
+    this.game.load.image('fans', 'assets/tiles/fans.png');
     this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
                            Phaser.Tilemap.TILED_JSON);
   }
