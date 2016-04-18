@@ -24,7 +24,7 @@ class BaseLevel extends Phaser.State {
     this.game.load.image('platforms', 'assets/tiles/platforms.png');
     this.game.load.image('pipes', 'assets/tiles/all_pipes.png');
     this.game.load.image('grates', 'assets/tiles/grates.png');
-    this.game.load.image('fans', 'assets/tiles/fans.png');
+    this.game.load.spritesheet('fans', 'assets/tiles/fans.png', 64, 64);
   }
 
   init(mapName: string) { this.mapName = mapName; }
@@ -78,6 +78,7 @@ export class SaturdayLevel extends BaseLevel {
     // TODO: Unfuck this bullshit.
     LEFT_VENT_IDX = 4;
     RIGHT_VENT_IDX = 6;
+    DUCT_IDX = 5;
     this.map = new Map(this.game, 'saturday_2');
     super.create();
   }
@@ -92,8 +93,11 @@ export class SundayLevel extends BaseLevel {
 
   create() {
     LEFT_VENT_IDX = 18;
+    DUCT_IDX = 19;
     RIGHT_VENT_IDX = 20;
     GRATE_IDX = 12;
+    LEFT_FAN_IDX = 7;
+    RIGHT_FAN_IDX = 9;
     this.map = new Map(this.game, 'sunday');
     super.create();
   }
@@ -105,12 +109,18 @@ interface MapConfig {
     grate: number;
     drain: number;
     spout: number;
+    left_fan: number;
+    right_fan: number;
+    duct_idx: number;
 }
 
 // Indecies of special tiles in the tilemap.
 var LEFT_VENT_IDX: number;
 var RIGHT_VENT_IDX: number;
 var GRATE_IDX: number;
+var LEFT_FAN_IDX: number;
+var RIGHT_FAN_IDX: number;
+var DUCT_IDX: number;
 
 export class Map {
   tileMap: Phaser.Tilemap;
@@ -147,24 +157,28 @@ export class Map {
     this.ductLayer = this.tileMap.createLayer('ducts');
     this.platformLayer = this.tileMap.createLayer('platforms');
 
-    // TODO: load the fans and make them spin.
-    /*
-      //  And now we convert all of the Tiled objects with an ID of 34 into
-     sprites within the coins group
-     map.createFromObjects('fans', 34, 'coin', 0, true, false, coins);
+    // Load in the fans and start them spinning.
+    let left_fans = this.game.add.group();
+    this.tileMap.createFromObjects('fans', LEFT_FAN_IDX, 'fans', 0, true, false, left_fans);
 
-     //  Add animations to all of the coin sprites
-     coins.callAll('animations.add', 'animations', 'spin', [0, 1, 2, 3, 4, 5],
-     10, true);
-     coins.callAll('animations.play', 'animations', 'spin');
-    */
+    let right_fans = this.game.add.group();
+    this.tileMap.createFromObjects('fans', RIGHT_FAN_IDX, 'fans', 2, true, false, right_fans);
+
+    //  Add animations to all of the coin sprites
+    left_fans.callAll('animations.add', 'animations', 'left_spin', [0, 1],
+      10, true);
+    left_fans.callAll('animations.play', 'animations', 'left_spin');
+
+    right_fans.callAll('animations.add', 'animations', 'right_spin', [2, 3],
+      10, true);
+    right_fans.callAll('animations.play', 'animations', 'right_spin');
 
     // Before you can use the collide function you need to set what tiles can
     // collide
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
     // Exclude pipe tiles from collsion on the duct layer.
-    this.tileMap.setCollisionByExclusion([ 5 ], true, 'ducts');
+    this.tileMap.setCollisionByExclusion([DUCT_IDX], true, 'ducts');
 
     // Change the world size to match the size of this layer
     this.platformLayer.resizeWorld();

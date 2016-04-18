@@ -172,7 +172,7 @@ class Steam extends CharacterState {
 
   private startPhysics() {
     this.sprite.body.bounce.y = 0.4;
-    this.sprite.body.gravity.y = -2000;
+    this.sprite.body.gravity.y = -1000;
   }
 
   private disablePhysics() {
