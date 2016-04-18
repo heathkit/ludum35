@@ -85,21 +85,32 @@ export class SaturdayLevel extends BaseLevel {
 
 export class SundayLevel extends BaseLevel {
   preload() {
-    super.preload() this.game.load.tilemap('sunday', 'assets/sunday.json', null,
+    super.preload();
+    this.game.load.tilemap('sunday', 'assets/sunday.json', null,
                                            Phaser.Tilemap.TILED_JSON);
   }
 
   create() {
     LEFT_VENT_IDX = 18;
     RIGHT_VENT_IDX = 20;
+    GRATE_IDX = 12;
     this.map = new Map(this.game, 'sunday');
     super.create();
   }
 }
 
+interface MapConfig {
+    left_vent: number;
+    right_vent: number;
+    grate: number;
+    drain: number;
+    spout: number;
+}
+
 // Indecies of special tiles in the tilemap.
 var LEFT_VENT_IDX: number;
 var RIGHT_VENT_IDX: number;
+var GRATE_IDX: number;
 
 export class Map {
   tileMap: Phaser.Tilemap;
@@ -206,8 +217,14 @@ export class Map {
     }
   }
 
-  collidePlatforms(sprite: Phaser.Sprite) {
-    this.game.physics.arcade.collide(sprite, this.platformLayer);
+  collidePlatforms(sprite: Phaser.Sprite, skipGrates: boolean) {
+    this.game.physics.arcade.collide(sprite, this.platformLayer,
+      null, (sprite, tile) => {
+        if (skipGrates && tile.index == GRATE_IDX) {
+          return false;
+        }
+        return true;
+      });
   }
 
   collideDucts(sprite: Phaser.Sprite) {

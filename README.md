@@ -34,6 +34,7 @@ recharge. (Possibly add an item to give you energy)
 - Death on falling through pits
 - Drain collision for water
 - Ice and steam are pushed by fans
+- follow pipes and drains instead of jumping to exit
 - Some kind of hud?
 
 ### Elements

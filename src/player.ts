@@ -65,7 +65,7 @@ export class Player {
 
     // Clamp velocity so we don't clip through platforms.
     this.sprite.body.velocity.y =
-        Phaser.Math.clamp(this.sprite.body.velocity.y, -1500, 1500);
+        Phaser.Math.clamp(this.sprite.body.velocity.y, -1000, 1000);
 
     // TODO: Determine bottom of the level from the map.
     let floor = this.map.tileMap.heightInPixels - this.map.tileMap.tileHeight;
@@ -107,7 +107,7 @@ class Ice extends CharacterState {
 
   update(cursors: Phaser.CursorKeys) {
     // Ice collides with platforms but cannot be controlled.
-    this.map.collidePlatforms(this.sprite);
+    this.map.collidePlatforms(this.sprite, false);
   }
 }
 
@@ -121,7 +121,7 @@ class Water extends CharacterState {
 
   update(cursors: Phaser.CursorKeys) {
     // Make the sprite collide with the ground layer
-    this.map.collidePlatforms(this.sprite);
+    this.map.collidePlatforms(this.sprite, true);
 
     // Water can slide around.
     if (cursors.left.isDown) {
@@ -233,6 +233,7 @@ class Steam extends CharacterState {
     // Ignore collisions during teleport.
     if (!this.teleporting) {
       this.map.collideDucts(this.sprite);
+      this.map.collidePlatforms(this.sprite, true);
     }
   }
 }
