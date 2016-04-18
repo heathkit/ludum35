@@ -117,6 +117,12 @@ class Steam extends CharacterState {
   teleporting: boolean;
 
   lastExitVent: number;
+  emitter: any;
+
+  constructor(sprite: Phaser.Sprite, map: Map, game: Phaser.Game) {
+    super(sprite, map, game);
+    this.makeSteamTrail();
+  }
 
   init() {
     this.lastExitVent = 0;
@@ -126,6 +132,21 @@ class Steam extends CharacterState {
 
     this.map.ventCallback =
         (from, to) => { this.teleportThroughPipe(from, to) };
+  }
+
+  private makeSteamTrail() {
+    this.emitter = this.game.add.emitter(0, 0, 20);
+    this.emitter.makeParticles('steam');
+    this.emitter.setXSpeed(0, 0);
+    this.emitter.setYSpeed(0, 0);
+
+    this.emitter.setRotation(0, 0);
+    this.emitter.setAlpha(.5, 0, 3000);
+    this.emitter.setScale(0.2, 1, 0.2, 1, 6000, Phaser.Easing.Quintic.Out);
+    this.emitter.gravity = 25;
+
+    this.emitter.start(false, 3000, 50);
+    this.emitter.on = false;
   }
 
   private startPhysics() {
@@ -145,20 +166,26 @@ class Steam extends CharacterState {
     console.log("Teleport from ", from, to);
 
     let shrink = this.game.add.tween(this.sprite.scale)
-                     .to({x : 0.1, y : 0.1}, 500, Phaser.Easing.Cubic.Out);
+                     .to({x : 0.1, y : 0.1}, 500, Phaser.Easing.Cubic.In);
     let expand = this.game.add.tween(this.sprite.scale)
                      .to({x : 1, y : 1}, 500, Phaser.Easing.Cubic.Out);
 
     let enterVent =
-        this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.Out);
-    let moveToExit =
-        this.game.add.tween(this.sprite).to(to, 1000, Phaser.Easing.Cubic.Out);
+        this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.In);
+    let moveToExit = this.game.add.tween(this.sprite)
+                         .to(to, 1000, Phaser.Easing.Cubic.InOut);
 
     enterVent.chain(moveToExit);
     enterVent.onStart.add(() => {shrink.start()});
     // Hide the sprite during teleport
-    moveToExit.onStart.add(() => {this.sprite.visible = false});
-    moveToExit.onComplete.add(() => {this.sprite.visible = true});
+    moveToExit.onStart.add(() => {
+      this.emitter.on = true;
+      this.sprite.visible = false
+    });
+    moveToExit.onComplete.add(() => {
+      this.emitter.on = false;
+      this.sprite.visible = true
+    });
     moveToExit.chain(expand);
 
     expand.onComplete.add(() => {
@@ -179,6 +206,8 @@ class Steam extends CharacterState {
 
   update(cursors: Phaser.CursorKeys) {
     // Steam just rises uncontrollably.
+    this.emitter.emitX = this.sprite.x;
+    this.emitter.emitY = this.sprite.y;
 
     // Ignore collisions during teleport.
     if (!this.teleporting) {

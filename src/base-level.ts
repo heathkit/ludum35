@@ -15,6 +15,7 @@ export class BaseLevel extends Phaser.State {
   }
 
   preload() {
+    this.game.load.image('steam', 'assets/images/steam.png');
     this.game.load.spritesheet('player', 'assets/tiles/cloud_water.png', 64,
                                64);
     this.game.load.image('tiles', 'assets/tiles/saturday_roughfile.png');

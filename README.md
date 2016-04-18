@@ -7,7 +7,7 @@ Entry for Ludum Dare 35.
 ## Overview
 
 You play phase change man! Through the power of super science, he can take the form of
-water, a cloud, or a rock. He'll need these extraordinary abilities, because sadly he
+water, steam, or ice. He'll need these extraordinary abilities, because sadly he
 cannot jump or fall very far.
 
 You can't hold a given form indefinately. Holding a form depletes energy, which needs to
@@ -20,31 +20,27 @@ recharge. (Possibly add an item to give you energy)
 - can rise through floor grates
 
 ### Liquid form
-- will fall to the bottom of the map
+- can move
 - flows through drains and pipes
 - falls through floor grates
 
 ## Ice (or block?) form
-- indestructible
 - will slide around along the floor
-- will smash through certain floor tiles when falling
+- pushed by fans
+- ?will smash through certain floor tiles when falling
 
 ## TODO
-- changing forms
-- getting sucked through vents
-- flowing through pipes
-- animations?
-- get information about the current tile and apply level effects
-
-- Split platforms into back/mid/foreground automatically
-- energy bar for being in a particular form
+- Drain collision for water
+- steam and water don't collide with grates
+- Ice slides frictionless
+- Ice and steam are pushed by fans
+- Some kind of hud?
 
 ### Elements
 ductwork
 fans
 pipes
 grates
-pushers?
 
 ## Phaser stuff
 Camera deadzone: http://phaser.io/examples/v2/camera/deadzone
