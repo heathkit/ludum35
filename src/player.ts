@@ -173,7 +173,7 @@ class Steam extends CharacterState {
     let enterVent =
         this.game.add.tween(this.sprite).to(from, 500, Phaser.Easing.Cubic.In);
     let moveToExit = this.game.add.tween(this.sprite)
-                         .to(to, 1000, Phaser.Easing.Cubic.InOut);
+                         .to(to, 1000, Phaser.Easing.Cubic.In);
 
     enterVent.chain(moveToExit);
     enterVent.onStart.add(() => {shrink.start()});
