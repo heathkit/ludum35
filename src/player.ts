@@ -163,7 +163,7 @@ class Water extends CharacterState {
     // Make the sprite collide with the ground layer
     this.map.collidePlatforms(this.sprite, true);
 
-    if (!this.teleporting) {
+    if (!this.teleporting && this.sprite.body.onFloor()) {
       // Water can slide around.
       if (cursors.left.isDown) {
         this.sprite.body.velocity.x = -500;
