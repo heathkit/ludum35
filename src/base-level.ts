@@ -111,6 +111,16 @@ export class Map {
     this.ductLayer = this.tileMap.createLayer('ducts');
     this.platformLayer = this.tileMap.createLayer('platforms');
 
+    // TODO: load the fans and make them spin.
+    /*
+      //  And now we convert all of the Tiled objects with an ID of 34 into sprites within the coins group
+     map.createFromObjects('Object Layer 1', 34, 'coin', 0, true, false, coins);
+
+     //  Add animations to all of the coin sprites
+     coins.callAll('animations.add', 'animations', 'spin', [0, 1, 2, 3, 4, 5], 10, true);
+     coins.callAll('animations.play', 'animations', 'spin');
+    */
+
     // Before you can use the collide function you need to set what tiles can
     // collide
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');

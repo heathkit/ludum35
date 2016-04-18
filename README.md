@@ -32,7 +32,6 @@ recharge. (Possibly add an item to give you energy)
 ## TODO
 - Drain collision for water
 - steam and water don't collide with grates
-- Ice slides frictionless
 - Ice and steam are pushed by fans
 - Some kind of hud?
 

@@ -26,7 +26,8 @@ export class Player {
 
     // The different characters are different frames in the same spritesheet.
     this.sprite.animations.add('steam', [ 5, 6, 7, 6 ], 7, true);
-    this.sprite.animations.add('water', [ 1, 2, 3 ], 1, true);
+    this.sprite.animations.add('water', [ 1 ], 0, false);
+    this.sprite.animations.add('water_drain', [ 1, 2, 3 ], 3, false);
     this.sprite.animations.add('ice', [ 0 ], 10, true);
 
     this.waterState = new Water(this.sprite, this.map, this.game);
@@ -151,7 +152,7 @@ class Steam extends CharacterState {
     this.startPhysics();
 
     this.map.ventCallback =
-        (from, to) => { this.teleportThroughPipe(from, to) };
+        (from, to) => { this.teleportThroughVent(from, to) };
   }
 
   private makeSteamTrail() {
@@ -180,7 +181,7 @@ class Steam extends CharacterState {
     this.sprite.body.velocity.x = 0;
   }
 
-  private teleportThroughPipe(from, to) {
+  private teleportThroughVent(from, to) {
     this.teleporting = true;
     this.disablePhysics();
     console.log("Teleport from ", from, to);
