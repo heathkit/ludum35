@@ -114,11 +114,10 @@ export class Map {
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
     // Exclude pipe tiles from collsion on the duct layer.
-    this.tileMap
-        .setCollisionByExclusion([ 5 ], true, 'ducts')
+    this.tileMap.setCollisionByExclusion([ 5 ], true, 'ducts');
 
-        // Change the world size to match the size of this layer
-        this.platformLayer.resizeWorld();
+    // Change the world size to match the size of this layer
+    this.platformLayer.resizeWorld();
 
     this.tileMap.setTileIndexCallback([ LEFT_VENT_IDX, RIGHT_VENT_IDX ],
                                       this.onVentHit, this, 'ducts');
