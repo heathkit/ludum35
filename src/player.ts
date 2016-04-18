@@ -44,6 +44,9 @@ export class Player {
 
   private changeState(newState: CharacterState) {
     newState.init();
+    if (this.currentState) {
+      this.currentState.cleanup();
+    }
     this.currentState = newState;
     console.log("Becoming state ", newState);
   }
@@ -76,6 +79,8 @@ class CharacterState {
   init() { console.log("Init unimplemented") }
 
   update(cursors: Phaser.CursorKeys) { console.log("Update unimplemented") }
+
+  cleanup() {}
 }
 
 class Water extends CharacterState {
@@ -107,8 +112,12 @@ class Steam extends CharacterState {
 
     this.sprite.body.bounce.y = 0.4;
     this.sprite.body.gravity.y = -2000;
+    this.map.ventCallback =
+        (from, to) => { console.log("Teleport between ", from, to); };
   }
-  
+
+  cleanup() { this.map.ventCallback = undefined; }
+
   update(cursors: Phaser.CursorKeys) {
     // Steam just rises uncontrollably.
 

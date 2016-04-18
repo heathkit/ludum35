@@ -61,13 +61,14 @@ export class BaseLevel extends Phaser.State {
   }
 }
 
+// TODO: Represent levels as sub classes of baselevel so we have an easy
+// way to hand code level-specific logic.
 class SaturdayLevel extends BaseLevel {
-    preload() {
-      super();
-      this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
+  preload() {
+    super.preload();
+    this.game.load.tilemap('saturday_2', 'assets/saturday_2.json', null,
                            Phaser.Tilemap.TILED_JSON);
-    }
-
+  }
 }
 
 // Indecies of special tiles in the tilemap.
@@ -81,8 +82,17 @@ export class Map {
   private ductLayer: Phaser.TilemapLayer;
   private game: Phaser.Game;
 
+  ventCallback: (from: Phaser.Point, to: Phaser.Point) => void;
+  private lastVentEventSent: number;
+
+  // Special tile flags
+  private overVent: boolean;
+
   constructor(game: Phaser.Game, mapName: string) {
+    this.overVent = false;
     this.game = game;
+    this.lastVentEventSent = 0;
+
     // Add the tilemap and tileset image. The first parameter in addTilesetImage
     // is the name you gave the tilesheet when importing it into Tiled, the
     // second
@@ -101,18 +111,55 @@ export class Map {
     this.tileMap.setCollisionBetween(1, 100, true, 'platforms');
 
     // Exclude pipe tiles from collsion on the duct layer.
-    this.tileMap.setCollisionByExclusion([5], true, 'ducts')
+    this.tileMap
+        .setCollisionByExclusion([ 5 ], true, 'ducts')
 
-    // Change the world size to match the size of this layer
-    this.platformLayer.resizeWorld();
+        // Change the world size to match the size of this layer
+        this.platformLayer.resizeWorld();
 
-    let ventCallback = (sprite, tile) => {
-        console.log("Over vent." , sprite, tile);
-        return true;
+    this.tileMap.setTileIndexCallback([ LEFT_VENT_IDX, RIGHT_VENT_IDX ],
+                                      this.onVentHit, this, 'ducts');
+  }
+
+  // Callback triggered when a sprite collides with a vent.
+  onVentHit(sprite: Phaser.Sprite, tile: Phaser.Tile) {
+    // Only register the collision if we have a callback.
+    if (this.ventCallback) {
+      // Debounce this event.
+      let elapsedSinceLastEvent =
+          this.game.time.totalElapsedSeconds() - this.lastVentEventSent
+
+      if (elapsedSinceLastEvent >= 2) {
+        // Send a callback with the enter and exit points.
+        let height = tile.height / 2;
+        let width = tile.width / 2;
+        let from = new Phaser.Point(tile.worldX + width, tile.worldY + height);
+        let otherVent = this.getOtherVent(tile);
+        let to = new Phaser.Point(otherVent.worldX + width,
+                                  otherVent.worldY + height);
+        this.ventCallback(from, to);
+        this.lastVentEventSent = this.game.time.totalElapsedSeconds();
+      }
+      return true
     }
+    return false;
+  }
 
-    this.tileMap.setTileIndexCallback([LEFT_VENT_IDX, RIGHT_VENT_IDX],
-      ventCallback, this, 'ducts');
+  // Given a vent tile, find the other vent tile in this map.
+  getOtherVent(tile: Phaser.Tile) {
+    let exitType = LEFT_VENT_IDX;
+    if (tile.index == LEFT_VENT_IDX) {
+      exitType = RIGHT_VENT_IDX;
+    }
+    let d = this.tileMap.layers[this.ductLayer.index].data
+    console.log(d);
+    for (let row = 0; row < d.length; row++) {
+      for (let col = 0; col < d[row].length; col++) {
+        if (d[row][col].index == exitType) {
+          return d[row][col];
+        }
+      }
+    }
   }
 
   collidePlatforms(sprite: Phaser.Sprite) {
