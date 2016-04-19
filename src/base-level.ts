@@ -31,6 +31,7 @@ class BaseLevel extends Phaser.State {
 
   create() {
     this.game.physics.startSystem(Phaser.Physics.ARCADE);
+    this.game.physics.arcade.TILE_BIAS = 32;
     this.game.stage.backgroundColor = "#a9f0ff";
 
     // Possible fix for jittery sprites.
