@@ -47,7 +47,7 @@
   \*****************/
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(/*! /home/heathkit/src/ludum35/src/index.ts */1);
+	module.exports = __webpack_require__(/*! /Users/heathkit/src/ludum35/src/index.ts */1);
 
 
 /***/ },
@@ -574,6 +574,9 @@
 	            _this.startPhysics();
 	            _this.sprite.animations.play("water");
 	            _this.sprite.visible = true;
+	            // Well, crap, ran out of time. If they make it to the drain, they won!
+	            window.alert("You win! Dr.Phase escaped and will start his new life as a superhero!");
+	            _this.game.state.start("MainMenu");
 	        });
 	        anim.onComplete.add(function () {
 	            _this.sprite.visible = false;
