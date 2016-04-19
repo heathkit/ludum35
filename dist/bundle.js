@@ -214,6 +214,7 @@
 	    BaseLevel.prototype.create = function () {
 	        var _this = this;
 	        this.game.physics.startSystem(Phaser.Physics.ARCADE);
+	        this.game.physics.arcade.TILE_BIAS = 32;
 	        this.game.stage.backgroundColor = "#a9f0ff";
 	        // Possible fix for jittery sprites.
 	        // See http://www.html5gamedevs.com/topic/15266-phaser-camera-jittering/
