@@ -148,6 +148,10 @@ class Water extends CharacterState {
       this.startPhysics();
       this.sprite.animations.play("water");
       this.sprite.visible = true;
+
+      // Well, crap, ran out of time. If they make it to the drain, they won!
+      window.alert("You win! Dr.Phase escaped and will start his new life as a superhero!");
+      this.game.state.start("MainMenu");
     });
     anim.onComplete.add(() => {
       this.sprite.visible = false;
